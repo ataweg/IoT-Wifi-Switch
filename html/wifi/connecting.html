@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta content="text/html; charset=utf-8" http-equiv="content-type">
+      <meta name="viewport" content="width=device-width, user-scalable=no">
+      <link rel="stylesheet" type="text/css" href="../css/siimple.min.css">
+      <link rel="stylesheet" type="text/css" href="../css/style.css">
+      <link rel="shortcut icon" type="image/png" href="../img/favicon.png">
+      <title>Connecting...</title>
+
+      <script type="text/javascript" src="../js/common.js"></script>
+      <script type="text/javascript" src="../js/140medley.min.js"></script>
+      <script type="text/javascript">
+         var xhr=j();
+
+         function getStatus()
+         {
+            xhr.open( "GET", "connstatus.cgi" );
+            xhr.onreadystatechange = function()
+            {
+               if( xhr.readyState == 4 && xhr.status >= 200 && xhr.status < 300 )
+               {
+                  var data = JSON.parse( xhr.responseText );
+                  if( data.status == "idle" )
+                  {
+                     $( "#status" ).innerHTML = "Preparing to connect...";
+                     window.setTimeout( getStatus, 1000 );
+                  }
+                  else if( data.status == "success" )
+                  {
+                     $( "#status" ).innerHTML = "Connected! Got IP " + data.ip + ". If you're in the same network, you can access it <a href=\"http://" + data.ip + "/\">here</a>.";
+                  }
+                  else if( data.status == "working" )
+                  {
+                     $( "#status" ).innerHTML = "Trying to connect to selected access point...";
+                     window.setTimeout( getStatus, 1000 );
+                  }
+                  else if( data.status == "fail" )
+                  {
+                     $( "#status" ).innerHTML = "Connection failed. Check password and selected AP.<br /><a href=\"../WifiSetup.tpl.html\">Go Back</a>";
+                  }
+               }
+            }
+            xhr.send();
+         }
+
+         window.onload = function( e )
+         {
+            getStatus();
+         };
+         </script>
+         <script>
+      </script>
+   </head>
+
+   <body>
+      <div class="navbar" id="myTopnav">
+         <a href="../index.tpl.html">Home</a>
+         <a href="../Timer.tpl.html">Switching Timer</a>
+         <a href="../MqttConfig.tpl.html">MQTT Client Configuration</a>
+         <a href="../WifiConfig.tpl.html">Wifi Configuration</a>
+         <a href="../WifiSetup.tpl.html">Wifi Setup</a>
+         <a href="../About.tpl.html">About</a>
+         <a href="javascript:void( 0 );" style="font-size:15px;" class="icon" onclick="navbar()">&#9776;</a>
+      </div>
+      <div class="grid main">
+         <h1>Connecting to AP...</h1>
+         <p>Status:<br />
+         <div id="status">...</div>
+         </p>
+      </div>
+   </body>
+</html>

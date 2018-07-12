@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta content="text/html; charset=utf-8" http-equiv="content-type">
+      <meta name="viewport" content="width=device-width, user-scalable=no">
+      <link rel="stylesheet" type="text/css" href="css/siimple.min.css">
+      <link rel="stylesheet" type="text/css" href="css/style.css">
+      <link rel="shortcut icon" type="image/png" href="img/favicon.png">
+      <title>Wifi Switch</title>
+
+      <script type="text/javascript" src="../js/common.js"></script>
+      <script type="text/javascript" src="../js/140medley.min.js"></script>
+      <script type="text/javascript">
+         var xhr=j();
+         var currAp="%WiFiCurrSsid%";
+
+         function createInputForAp( ap )
+         {
+            if( ap.essid == "" && ap.rssi == 0 ) return;
+
+            var div = document.createElement( "div" );
+            div.id = "apdiv";
+
+            var rssi = document.createElement( "div" );
+            var rssiVal = -Math.floor( ap.rssi / 51 ) * 32;
+            rssi.className = "wifi_icon";
+            rssi.style.backgroundPosition = "0px " + rssiVal + "px";
+
+            var encrypt = document.createElement( "div" );
+            var encVal = "-64"; // assume wpa/wpa2
+            if( ap.enc == "0" ) encVal = "0"; // open
+            if( ap.enc == "1" ) encVal = "-32"; // wep
+            encrypt.className = "wifi_icon";
+            encrypt.style.backgroundPosition = "-32px " + encVal + "px";
+
+            var input = document.createElement( "input" );
+            input.type = "radio";
+            input.name = "essid";
+            input.value = ap.essid;
+            if( currAp == ap.essid ) input.checked = "1";
+            input.id = "opt-" + ap.essid;
+
+            var label = document.createElement( "label" );
+            label.htmlFor = "opt-" + ap.essid;
+            label.textContent = ap.essid;
+
+            var rssi_val = document.createElement( "label" );
+            rssi_val.htmlFor = "opt-" + ap.rssi;
+            rssi_val.textContent = ap.rssi + " - ";
+
+            div.appendChild( input );
+            div.appendChild( rssi );
+            div.appendChild( encrypt );
+            div.appendChild( rssi_val );
+            div.appendChild( label );
+            return div;
+         }
+
+         function getSelectedEssid()
+         {
+            var e = document.forms.wifiform.elements;
+            for( var i = 0; i < e.length; i++ )
+            {
+               if( e[i].type == "radio" && e[i].checked ) return e[i].value;
+            }
+            return currAp;
+         }
+
+
+         function scanAPs()
+         {
+            xhr.open( "GET", "wifi/wifiscan.cgi" );
+            xhr.onreadystatechange = function()
+            {
+               if( xhr.readyState == 4 && xhr.status >= 200 && xhr.status < 300 )
+               {
+                  var data = JSON.parse( xhr.responseText );
+                  currAp = getSelectedEssid();
+                  if( data.result.inProgress == "0" && data.result.APs.length > 1 )
+                  {
+                     $( "#aps" ).innerHTML = "";
+                     for( var i = 0; i < data.result.APs.length; i++ )
+                     {
+                        if( data.result.APs[i].essid == "" && data.result.APs[i].rssi == 0 ) continue;
+                        $( "#aps" ).appendChild( createInputForAp( data.result.APs[i] ) );
+                     }
+                     window.setTimeout( scanAPs, 5000 );  // orig. value 20000
+                  }
+                  else
+                  {
+                     window.setTimeout( scanAPs, 1000 );
+                  }
+               }
+            }
+            xhr.send();
+         }
+
+         window.onload = function( e )
+         {
+            scanAPs();
+         };
+
+      </script>
+   </head>
+
+   <body>
+      <div class="navbar" id="myTopnav">
+         <a href="index.tpl.html">Home</a>
+         <a href="Timer.tpl.html">Switching Timer</a>
+         <a href="MqttConfig.tpl.html">MQTT Client Configuration</a>
+         <a href="WifiConfig.tpl.html">Wifi Configuration</a>
+         <a class="active" href="WifiSetup.tpl.html">Wifi Setup</a>
+         <a href="About.tpl.html">About</a>
+         <a href="javascript:void( 0 );" style="font-size:15px;" class="icon" onclick="navbar()">&#9776;</a>
+      </div>
+      <div class="grid main">
+         <h1>Connect to a Wifi Network</h1>
+         <p>
+            Current WiFi mode: %WiFiMode%
+         </p>
+         <p>
+            Note: %WiFiApWarn%
+         </p>
+         <form name="wifiform" action="wifi/connect.cgi" method="post">
+            <p>
+               To connect to a WiFi network, please select one of the detected networks...
+            </p>
+            <div id="aps">
+               Scanning...
+            </div>
+            <p>
+               WiFi password, if applicable:
+               <br>
+               <input type="text" name="password" value="%WiFiPassword%">
+               <br>
+               <input type="submit" name="connect" value="Connect!">
+            </p>
+            <table   style="background-color: rgb( 255, 255, 200 );">
+               <tbody>
+                  <tr>
+                     <td style="width: 180px;">WLAN Network Name:</td>
+                     <td style="margin-left: -2px;">
+                         <input name="wlan_net" maxlength="32" size="45" type="text" value="%wlan_net%">
+                     </td>
+                  </tr>
+                  <tr>
+                     <td>Network Password:</td>
+                     <td>
+                        <input name="wlan_password" maxlength="64" size="45" type="text" value="%wlan_password%">
+                     </td>
+                  </tr>
+               </tbody>
+            </table>
+         </form>
+      </div>
+   </body>
+</html>

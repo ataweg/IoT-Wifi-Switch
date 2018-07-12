@@ -1,0 +1,61 @@
+# Makefile with the options specific to the build of a non-upgradable firmware with
+# the espfs combined into the flash binary.
+
+# linker script used for the linker step
+LD_SCRIPT	= eagle.app.v6.ld
+# Extra script to tell the linker the correct irom0 memory available
+EXTRA_LD_SCRIPTS += $(BUILD_DIR_BASE)ldscript_memspecific.ld
+
+$(BUILD_DIR_BASE)ldscript_memspecific.ld:
+	$(vecho) "GEN $@"
+	$(Q) echo "MEMORY { irom0_0_seg : org = 0x40210000, len = "$$(printf "0x%X" $$(($(ESP_SPI_FLASH_SIZE_K)*1024-0x4000)))" }"> $(BUILD_DIR_BASE)ldscript_memspecific.ld
+
+# --------------------------------------------------------------------------
+#  Flash Target
+# --------------------------------------------------------------------------
+
+flash: $(FW_FILE_1) $(FW_FILE_2)
+ifeq ($(app), 0)
+	$(vecho) "Flashing (combined) ..."
+#	$(vecho) $(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(flashimageoptions) $(FW_FILE_1_ADDR) $(FW_FILE_1) $(FW_FILE_2_ADDR) $(FW_FILE_2)
+	$(Q)     $(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(flashimageoptions) $(FW_FILE_1_ADDR) $(FW_FILE_1) $(FW_FILE_2_ADDR) $(FW_FILE_2)
+else
+   ifeq ($(boot), none)
+	$(vecho) "Flashing (combined no boot) ..."
+#	$(vecho) $(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(flashimageoptions) $(FW_FILE_1_ADDR) $(FW_FILE_1) $(FW_FILE_2_ADDR) $(FW_FILE_2)
+	$(Q)     $(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(flashimageoptions) $(FW_FILE_1_ADDR) $(FW_FILE_1) $(FW_FILE_2_ADDR) $(FW_FILE_2)
+   else
+	$(vecho) "Flashing (combined upgrade) ..."
+#	$(vecho) $(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(flashimageoptions) $(addr_upgrade) $(FW_DIR_BASE)upgrade/$(BIN_NAME).bin
+	$(Q)     $(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(flashimageoptions) $(addr_upgrade) $(FW_DIR_BASE)upgrade/$(BIN_NAME).bin
+   endif
+endif
+
+flashboot:
+ifeq ($(app), 0)
+	$(vecho) "No boot needed."
+else
+    ifneq ($(boot), new)
+	$(vecho) "Flash boot_v1.2 and +"
+	$(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)bin/boot_v1.2.bin
+    else
+        ifneq ($(findstring $(size_map),  6  8  9),)
+		$(vecho) "Flash boot_v1.7 and +"
+		$(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)bin/boot_v1.7.bin
+        else
+            ifeq ($(size_map), 5)
+		$(vecho) "Flash boot_v1.5 and +"
+		$(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)bin/boot_v1.6.bin
+            else
+		$(vecho) "Flash boot_v1.2 and +"
+		$(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)bin/boot_v1.2.bin
+            endif
+        endif
+    endif
+endif
+
+flashblank:
+	$(vecho) "Flash clear user data at $(BLANKPOS) (combined)."
+	$(vecho) "$(ESPTOOL) $(ESPTOOL_OPTS) write_flash  $(ESPTOOL_FLASHDEF) $(BLANKPOS) $(SDK_BASE)bin/blank.bin"
+	$(Q) $(ESPTOOL) $(ESPTOOL_OPTS) write_flash $(ESPTOOL_FLASHDEF) $(BLANKPOS) $(SDK_BASE)bin/blank.bin
+

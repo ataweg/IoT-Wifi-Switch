@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta content="text/html; charset=utf-8" http-equiv="content-type">
+      <meta name="viewport" content="width=device-width, user-scalable=no">
+      <link rel="stylesheet" type="text/css" href="css/siimple.min.css">
+      <link rel="stylesheet" type="text/css" href="css/style.css">
+      <link rel="shortcut icon" type="image/png" href="img/favicon.png">
+      <title>Wifi Switch</title>
+
+      <script type="text/javascript" src="js/common.js"></script>
+      <script type="application/javascript">
+
+         // see https://stackoverflow.com/questions/12662355/i-want-the-last-selected-option-to-be-selected-in-my-select-form-after-the-use
+
+         // --------------------------------------------------------------------
+         //
+         // --------------------------------------------------------------------
+
+         function initValues_onload()
+         {
+            // for checkboxes and dropdown selections
+            document.getElementById( "mqtt_enable_ssl"  ).value = "%mqtt_enable_ssl%"
+            document.getElementById( "mqtt_self_signed" ).value = "%mqtt_self_signed%";
+
+            // check cookies
+            itemShowHide( 'iconMqttClientConfig',  'sectionMqttClientConfig',  getCookie( 'sectionMqttClientConfig' ) );
+            itemShowHide( 'iconMqttNetworkConfig', 'sectionMqttNetworkConfig', getCookie( 'sectionMqttNetworkConfig' ) );
+         }
+
+
+      </script>
+   </head>
+
+   <body onload="initValues_onload()">
+      <div class="navbar" id="myTopnav">
+         <a href="index.tpl.html">Home</a>
+         <a href="Timer.tpl.html">Switching Timer</a>
+         <a class="active" href="MqttConfig.tpl.html">MQTT Client Configuration</a>
+         <a href="WifiConfig.tpl.html">Wifi Configuration</a>
+         <a href="WifiSetup.tpl.html">Wifi Setup</a>
+         <a href="About.tpl.html">About</a>
+         <a href="javascript:void( 0 );" style="font-size:15px;" class="icon" onclick="navbar()">&#9776;</a>
+      </div>
+      <div class="grid main">
+         <div>
+            <h1 onclick="itemShowHide( 'iconMqttClientConfig','sectionMqttClientConfig', 'toggle' )">
+               MQTT Client Configuration
+               <img id="iconMqttClientConfig" src="img/arrow_down.png" alt=""/>
+            </h1>
+            <div id="sectionMqttClientConfig" style="display: none;">
+               <table style="background-color: rgb( 255, 255, 200 );">
+                  <tbody>
+                     <tr align=left style="background-color: rgb( 255, 200, 0 );font-weight: bold;">
+                        <th width=160><span>Device</span></th>
+                        <th width=200><span>Control ( Submit )</span></th>
+                        <th width=200><span>Status ( Publish )</span></th>
+                     </tr>
+                     <tr>
+                        <td>Relay:</td>
+                        <td> <input id="cRelay" type="text" maxlength="32" size="45" name="cRelay" value="%cRelay%" onchange="updateControl( this.id, this.value )"> </td>
+                        <td> <input id="sRelay" type="text" maxlength="32" size="45" name="sRelay" value="%sRelay%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>Button:</td>
+                        <td> <input id="cButton" type="text" maxlength="32" size="45" name="cButton" value="%cButton%" onchange="updateControl( this.id, this.value )"> </td>
+                        <td> <input id="sButton" type="text" maxlength="32" size="45" name="sButton" value="%sButton%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>System Led:</td>
+                        <td> <input id="cSysLed" type="text" maxlength="32" size="45" name="cSysLed" value="%cSysLed%" onchange="updateControl( this.id, this.value )"> </td>
+                        <td> <input id="sSysLed" type="text" maxlength="32" size="45" name="sSysLed" value="%sSysLed%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>Info Led:</td>
+                        <td> <input id="cInfoLed" type="text" maxlength="32" size="45" name="cInfoLed" value="%cInfoLed%" onchange="updateControl( this.id, this.value )"> </td>
+                        <td> <input id="sInfoLed" type="text" maxlength="32" size="45" name="sInfoLed" value="%sInfoLed%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>Power:</td>
+                        <td> <input id="cPowerSense" type="text" maxlength="32" size="45" name="cPowerSense" value="%cPowerSense%" onchange="updateControl( this.id, this.value )"> </td>
+                        <td> <input id="sPowerSense" type="text" maxlength="32" size="45" name="sPowerSense" value="%sPowerSense%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>Time:</td>
+                        <td> <input id="cTime" type="text" maxlength="32" size="45" name="cTime" value="%cTime%" onchange="updateControl( this.id, this.value )"> </td>
+                        <td> <input id="sTime" type="text" maxlength="32" size="45" name="sTime" value="%sTime%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                  </tbody>
+               </table>
+               <br>
+            </div>
+         </div>
+         <div>
+            <h1 onclick="itemShowHide( 'iconMqttNetworkConfig','sectionMqttNetworkConfig', 'toggle' )">
+               MQTT Network Configuration
+               <img id="iconMqttNetworkConfig" src="img/arrow_down.png" alt=""/>
+            </h1>
+            <div id="sectionMqttNetworkConfig" style="display: none;">
+               <table style="background-color: rgb( 255, 255, 200 );">
+                  <tbody>
+                     <tr align=left style="background-color: rgb( 255, 200, 0 );font-weight: bold;">
+                        <th width=160><span>Parameter</span></th>
+                        <th width=200><span>Value</span></th>
+                     </tr>
+                     <tr>
+                        <td>MQTT Client:</td>
+                        <td> <input id="mqtt_client" type="text" maxlength="32" size="45" name="mqtt_client" value="%mqtt_client%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>MQTT Server:</td>
+                        <td> <input id="mqtt_server" type="text" maxlength="64" size="45" name="mqtt_server" value="%mqtt_server%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>MQTT Port:</td>
+                        <td> <input id="mqtt_port" type="text" maxlength="8" size="45" name="mqtt_port" value="%mqtt_port%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>MQTT User:</td>
+                        <td> <input id="mqtt_user" type="text" maxlength="32" size="45" name="mqtt_user" value="%mqtt_user%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>MQTT Password:</td>
+                        <td> <input id="mqtt_password" type="text" maxlength="64" size="45" name="mqtt_password" value="%mqtt_password%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>MQTT Client Id:</td>
+                        <td> <input id="mqtt_client_id" type="text" maxlength="32" size="45" name="mqtt_client_id" value="%mqtt_client_id%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>MQTT Enable SSL:</td>
+                        <td>
+                           <select id="mqtt_enable_ssl" name="mqtt_enable_ssl" style="width:100%%" onchange="updateControl( this.id, this.value )">
+                              <option value="0">No</option>
+                              <option value="1">Yes</option>
+                           </select>
+                        </td>
+                     </tr>
+                     <tr>
+                        <td>MQTT Self Signed:</td>
+                        <td>
+                           <select id="mqtt_self_signed" name="mqtt_self_signed" style="width:100%%" onchange="updateControl( this.id, this.value )">
+                              <option value="0">No</option>
+                              <option value="1">Yes</option>
+                           </select>
+                        </td>
+                     </tr>
+                     <tr>
+                        <td>MQTT Keep Alive:</td>
+                        <td> <input id="mqtt_keep_alive" type="text" maxlength="8" size="45" name="mqtt_keep_alive" value="%mqtt_keep_alive%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      </div>
+   </body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta content="text/html; charset=utf-8" http-equiv="content-type">
+      <meta name="viewport" content="width=device-width, user-scalable=no">
+      <link rel="stylesheet" type="text/css" href="css/siimple.min.css">
+      <link rel="stylesheet" type="text/css" href="css/style.css">
+      <link rel="shortcut icon" type="image/png" href="img/favicon.png">
+      <title>Wifi Switch</title>
+
+      <script type="text/javascript" src="js/common.js"></script>
+      <script type="application/javascript">
+
+         var retries;
+
+         // --------------------------------------------------------------------
+         //
+         // --------------------------------------------------------------------
+
+         function relay_switch( state )
+         {
+            document.getElementById( "relay_switch" ).checked = state
+
+            if( document.getElementById( "relay_switch" ).checked ) { document.getElementById( "hidden_relay_switch" ).disabled = true; }
+         }
+
+         // --------------------------------------------------------------------
+         //
+         // --------------------------------------------------------------------
+
+         function page_onload()
+         {
+            relay_switch( "%relay_switch%" );
+
+            wsOpen();         // open websocket /status
+         }
+
+         // --------------------------------------------------------------------
+         //
+         // --------------------------------------------------------------------
+
+         function setMsg( cls, text )
+         {
+            sbox = document.getElementById( 'status_box' );
+            sbox.className = "alert alert-" + cls;
+            sbox.innerHTML = text;
+            console.log( text );
+         }
+
+         // --------------------------------------------------------------------
+         // open 1st websocket /status
+         // for broadcast system status message
+         // update info box at the top
+         function wsOpen()
+         {
+            var ws;
+
+            if( ws === undefined || ws.readyState != 0 )
+            {
+               if( retries )
+                  setMsg( "error", "WebSocket timeout, retrying.." );
+               else
+                  setMsg( "info", "Opening WebSocket.." );
+
+               // open the 1st web socket for sending the switch status
+               var uri = "/status";
+               ws = new WebSocket( "ws://" + location.host + uri );
+               ws.binaryType = 'arraybuffer';
+
+               ws.onopen = function( evt )
+               {
+                  retries = 0;
+                  setMsg( "done", "WebSocket is open." );
+               };
+
+               ws.onerror = function( evt )
+               {
+                  setMsg( "error", "WebSocket error!" );
+               };
+
+               ws.onmessage = function( evt )
+               {
+                  console.log( evt.data );
+                  var stats = JSON.parse( evt.data );
+                  console.log( stats );
+                  // values send thru websockTimerCb() or my2ndWebsocketRecv() in user\user_httpd.c
+                  document.getElementById( 'date_time' ).innerHTML = stats.date_time;
+                  document.getElementById( 'uptime' ).innerHTML    = stats.uptime + ' seconds';
+                  document.getElementById( 'heap' ).innerHTML      = stats.heap + ' bytes';
+                  document.getElementById( 'sysled' ).innerHTML    = ( stats.sysled == 1 ) ? 'On' : 'Off';
+                  document.getElementById( 'relay' ).innerHTML     = ( stats.relay == 1 ) ? 'On' : 'Off';
+                  document.getElementById( 'info_led' ).innerHTML  = ( stats.info_led == 1 ) ? 'On' : 'Off';
+                  document.getElementById( 'power' ).innerHTML     = stats.power;
+
+                  relay_switch( stats.relay == 1 ? true : false );
+               };
+               retries = 0;
+            }
+         }
+
+      </script>
+
+   </head>
+
+   <body onload="page_onload()">
+      <div class="navbar" id="myTopnav">
+         <a class="active" href="index.tpl.html">Home</a>
+         <a href="Timer.tpl.html">Switching Timer</a>
+         <a href="MqttConfig.tpl.html">MQTT Client Configuration</a>
+         <a href="WifiConfig.tpl.html">Wifi Configuration</a>
+         <a href="WifiSetup.tpl.html">Wifi Setup</a>
+         <a href="About.tpl.html">About</a>
+         <a href="javascript:void( 0 );" style="font-size:15px;" class="icon" onclick="navbar()">&#9776;</a>
+      </div>
+      <div class="grid main">
+         <h1>Home</h1>
+         <div>
+            Firmware #%version_build% build %version_date%.
+         </div>
+         <br>
+         <div id="status_box" class="alert alert-info">Loading..</div>
+         <br>
+         <div class="chart">
+            <table class="relay_table">
+               <tbody>
+                  <tr>
+                     <td>Relay</td>
+                     <td style="width: 100px;"><br>
+                  </tr>
+                  <tr>
+                     <!-- see https://proto.io/freebies/onoff/ -->
+                     <!--     https://www.w3schools.com/howto/howto_css_switch.asp -->
+                     <td class="onoffswitch">
+                        <input type="hidden"   id="hidden_relay_switch" name="relay_switch" value="0">
+                        <input type="checkbox" id="relay_switch"        name="relay_switch" value="1" class="onoffswitch-checkbox" onClick="checkboxToggle( 'relay_switch' )">
+                        <label class="onoffswitch-label" for="relay_switch">
+                        <span class="onoffswitch-inner"></span>
+                        <span class="onoffswitch-switch"></span>
+                        </label>
+                     </td>
+                     <td>
+                     <br>
+                     </td>
+                  </tr>
+               </tbody>
+            </table>
+         </div>
+         <h1>Device Status</h1>
+         <table class="table table-striped">
+            <tbody>
+               <tr>
+                  <td><b>Date &amp; Time:</b></td>
+                  <td id="date_time"><br>
+                  </td>
+               </tr>
+               <tr>
+                  <td><b>Relay state:</b></td>
+                  <td id="relay"><br>
+                  </td>
+               </tr>
+               <tr>
+                  <td><b>System LED state:</b></td>
+                  <td id="sysled"><br>
+                  </td>
+               </tr>
+               <tr>
+                  <td><b>Info LED state:</b></td>
+                  <td id="info_led"><br>
+                  </td>
+               </tr>
+               <tr>
+                  <td><b>Power state:</b></td>
+                  <td id="power"><br>
+                  </td>
+               </tr>
+            </tbody>
+               <tr>
+                  <td><b>Uptime:</b></td>
+                  <td id="uptime"><br>
+                  </td>
+               </tr>
+               <tr>
+                  <td><b>Free heap:</b></td>
+                  <td id="heap"><br>
+                  </td>
+               </tr>
+               <tr>
+                  <td><b>Last Reset Cause:</b></td>
+                  <td>%sys_rst_info%<br>
+                  </td>
+               </tr>
+            </tbody>
+         </table>
+         <h1>Server/Client Status</h1>
+         <table class="table table-striped">
+            <tbody>
+               <tr>
+                  <td><b>Hostname:</b></td>
+                  <td><a href="http://%hostname%/">%hostname%</a><br>
+                  </td>
+               </tr>
+               <tr>
+                  <td><b>IP Address:</b></td>
+                  <td><a href="httP://%ip_address%/">%ip_address%</a><br>
+                  </td>
+               </tr>
+               <tr>
+                  <td><b>MAC Address</b></td>
+                  <td>%mac_address%<br>
+                  </td>
+               </tr>
+               <tr>
+                  <td><b>WLAN Domain:</b></td>
+                  <td>%wlan_net%<br>
+                  </td>
+               </tr>
+            </tbody>
+         </table>
+      </div>
+   </body>
+</html>

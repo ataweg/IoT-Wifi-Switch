@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta content="text/html; charset=utf-8" http-equiv="content-type">
+      <meta name="viewport" content="width=device-width, user-scalable=no">
+      <link rel="stylesheet" type="text/css" href="css/siimple.min.css">
+      <link rel="stylesheet" type="text/css" href="css/style.css">
+      <link rel="shortcut icon" type="image/png" href="img/favicon.png">
+      <title>Wifi Switch</title>
+
+      <script type="text/javascript" src="js/common.js"></script>
+      <script type="application/javascript">
+
+         // see https://stackoverflow.com/questions/12662355/i-want-the-last-selected-option-to-be-selected-in-my-select-form-after-the-use
+
+         // --------------------------------------------------------------------
+         //
+         // --------------------------------------------------------------------
+
+         function initValues_onload()
+         {
+            // for checkboxes and dropdown selections
+            document.getElementById( "ap_authmode"    ).value = "%ap_authmode%"
+            document.getElementById( "ap_ssid_hidden" ).value = "%ap_ssid_hidden%"
+            document.getElementById( "ap_bandwidth"   ).value = "%ap_bandwidth%";
+            document.getElementById( "sta_only"       ).value = "%sta_only%";
+            document.getElementById( "sta_power_save" ).value = "%sta_power_save%";
+            document.getElementById( "sta_static_ip"  ).value = "%sta_static_ip%";
+            document.getElementById( "dhcp_enable"    ).value = "%dhcp_enable%";
+
+            // check cookies
+            itemShowHide( 'iconClientConfig',   'sectionClientConfig',   getCookie( 'sectionClientConfig' ) );
+            itemShowHide( 'iconSoftApConfig',   'sectionSoftApConfig',   getCookie( 'sectionSoftApConfig' ) );
+            itemShowHide( 'iconStationConfig',  'sectionStationConfig',  getCookie( 'sectionStationConfig' ) );
+            itemShowHide( 'iconDhcpConfig',     'sectionDhcpConfig',     getCookie( 'sectionDhcpConfig' ) );
+         }
+
+
+      </script>
+   </head>
+
+   <body onload="initValues_onload()">
+      <div class="navbar" id="myTopnav">
+         <a href="index.tpl.html">Home</a>
+         <a href="Timer.tpl.html">Switching Timer</a>
+         <a href="MqttConfig.tpl.html">MQTT Client Configuration</a>
+         <a class="active" href="WifiConfig.tpl.html">Wifi Configuration</a>
+         <a href="WifiSetup.tpl.html">Wifi Setup</a>
+         <a href="About.tpl.html">About</a>
+         <a href="javascript:void( 0 );" style="font-size:15px;" class="icon" onclick="navbar()">&#9776;</a>
+      </div>
+      <div class="grid main">
+         <div>
+            <h1 onclick="itemShowHide( 'iconClientConfig','sectionClientConfig', 'toggle' )">
+               Client Configuration
+               <img id="iconClientConfig" src="img/arrow_down.png" alt=""/>
+            </h1>
+            <div id="sectionClientConfig" style="display: none;">
+               <table style="background-color: rgb( 255, 255, 200 );" >
+                  <tbody>
+                     <tr align=left style="background-color: rgb( 255, 200, 0 );font-weight: bold;">
+                        <th width=160><span>Parameter</span></th>
+                        <th width=200><span>Value</span></th>
+                     </tr>
+                     <tr>
+                        <td>Client:</td>
+                        <td> <input id="wifi_client" type="text" maxlength="32" size="45" name="wifi_client" value="%wifi_client%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>Server:</td>
+                        <td> <input id="wifi_server" type="text" maxlength="64" size="45" name="wifi_server" value="%wifi_server%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>Port:</td>
+                        <td> <input id="wifi_port" type="text" maxlength="8" size="45" name="wifi_port" value="%wifi_port%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>User:</td>
+                        <td> <input id="wifi_user" type="text" maxlength="32" size="45" name="wifi_user" value="%wifi_user%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>Password:</td>
+                        <td> <input id="wifi_password" type="text" maxlength="64" size="45" name="wifi_password" value="%wifi_password%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                  </tbody>
+               </table>
+               <br>
+            </div>
+         </div>
+         <div>
+            <h1 onclick="itemShowHide( 'iconSoftApConfig','sectionSoftApConfig', 'toggle' )">
+               SoftAp Configuration
+               <img id="iconSoftApConfig" src="img/arrow_down.png" alt=""/>
+            </h1>
+            <div id="sectionSoftApConfig" style="display: none;">
+               <table style="background-color: rgb( 255, 255, 200 );" >
+                  <tbody>
+                     <tr align=left style="background-color: rgb( 255, 200, 0 );font-weight: bold;">
+                        <th width=160><span>Parameter</span></th>
+                        <th width=200><span>Value</span></th>
+                     </tr>
+                     <tr>
+                        <td>SSID:</td>
+                        <td> <input id="ap_ssid" type="text" maxlength="32" size="45" name="ap_ssid" value="%ap_ssid%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>Password:</td>
+                        <td> <input id="ap_password" type="text" maxlength="64" size="45" name="ap_password" value="%ap_password%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>AuthMode:</td>
+                        <td>
+                           <select id="ap_authmode" name="ap_authmode" style="width:100%%" onchange="updateControl( this.id, this.value )">
+                              <option value="0">open</option>
+                              <option value="1">WEP</option>
+                              <option value="2">WPA_PSK</option>
+                              <option value="3">WPA2_PSK</option>
+                              <option value="4">WPA_WPA2_PSK</option>
+                              <option value="5">WPA2_ENTERPRISE</option>
+                           </select>
+                        </td>
+                     </tr>
+                     <tr>
+                        <td>ap_ssid_hidden:</td>
+                        <td>
+                           <select id="ap_ssid_hidden" name="ap_ssid_hidden" style="width:100%%" onchange="updateControl( this.id, this.value )">
+                              <option value="0">No</option>
+                              <option value="1">Yes</option>
+                           </select>
+                        </td>
+                     </tr>
+                     <tr>
+                        <td>ap_max_connection:</td>
+                        <td> <input id="ap_max_connection" type="text" maxlength="8" size="45" name="ap_max_connection" value="%ap_max_connection%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>ap_bandwidth:</td>
+                        <td>
+                           <select id="ap_bandwidth" name="ap_bandwidth" style="width:100%%" onchange="updateControl( this.id, this.value )">
+                              <option value="1">20 Mhz</option>
+                              <option value="2">40 Mhz</option>
+                           </select>
+                        </td>
+                     </tr>
+                     <tr>
+                        <td>ap_beacon_interval:</td>
+                        <td> <input id="ap_beacon_interval" type="text" maxlength="8" size="45" name="ap_beacon_interval" value="%ap_beacon_interval%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>ap_address:</td>
+                        <td> <input id="ap_address" type="text" maxlength="32" size="45" name="ap_address" value="%ap_address%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>ap_gateway:</td>
+                        <td> <input id="ap_gateway" type="text" maxlength="32" size="45" name="ap_gateway" value="%ap_gateway%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>ap_netmask:</td>
+                        <td> <input id="ap_netmask" type="text" maxlength="32" size="45" name="ap_netmask" value="%ap_netmask%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                  </tbody>
+               </table>
+               <br>
+            </div>
+         </div>
+         <div>
+            <h1 onclick="itemShowHide( 'iconStationConfig','sectionStationConfig', 'toggle' )">
+               Station Configuration
+               <img id="iconStationConfig" src="img/arrow_down.png" alt=""/>
+            </h1>
+            <div id="sectionStationConfig" style="display: none;">
+               <table style="background-color: rgb( 255, 255, 200 );" >
+                  <tbody>
+                     <tr align=left style="background-color: rgb( 255, 200, 0 );font-weight: bold;">
+                        <th width=160><span>Parameter</span></th>
+                        <th width=50><span>Value</span></th>
+                     </tr>
+                     <tr>
+                        <td>sta_only:</td>
+                        <td>
+                           <select id="sta_only" name="sta_only" style="width:100%%" onchange="updateControl( this.id, this.value )">
+                              <option value="0">No</option>
+                              <option value="1">Yes</option>
+                           </select>
+                        </td>
+                     </tr>
+                     <tr>
+                        <td>sta_power_save:</td>
+                        <td>
+                           <select id="sta_power_save" name="sta_power_save" style="width:100%%" onchange="updateControl( this.id, this.value )">
+                              <option value="0">No</option>
+                              <option value="1">Yes</option>
+                           </select>
+                        </td>
+                     </tr>
+                     <tr>
+                        <td>sta_static_ip:</td>
+                        <td>
+                           <select id="sta_static_ip" name="sta_static_ip" style="width:100%%" onchange="updateControl( this.id, this.value )">
+                              <option value="0">No</option>
+                              <option value="1">Yes</option>
+                           </select>
+                        </td>
+                     </tr>
+                  </tbody>
+               </table>
+               <br>
+            </div>
+         </div>
+         <div>
+            <h1 onclick="itemShowHide( 'iconDhcpConfig','sectionDhcpConfig', 'toggle' )">
+               DHCP Configuration
+               <img id="iconDhcpConfig" src="img/arrow_down.png" alt=""/>
+            </h1>
+            <div id="sectionDhcpConfig" style="display: none;">
+               <table style="background-color: rgb( 255, 255, 200 );" >
+                  <tbody>
+                     <tr align=left style="background-color: rgb( 255, 200, 0 );font-weight: bold;">
+                        <th width=160><span>Parameter</span></th>
+                        <th width=200><span>Value</span></th>
+                     </tr>
+                     <tr>
+                        <td>dhcp_enable:</td>
+                        <td>
+                           <select id="dhcp_enable" name="dhcp_enable" style="width:100%%" onchange="updateControl( this.id, this.value )">
+                              <option value="0">No</option>
+                              <option value="1">Yes</option>
+                           </select>
+                        </td>
+                     </tr>
+                     <tr>
+                        <td>dhcp_server:</td>
+                        <td> <input id="dhcp_server" type="text" maxlength="64" size="45" name="dhcp_server" value="%dhcp_server%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>dhcp_address:</td>
+                        <td> <input id="dhcp_address" type="text" maxlength="32" size="45" name="dhcp_address" value="%dhcp_address%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>dhcp_gateway:</td>
+                        <td> <input id="dhcp_gateway" type="text" maxlength="32" size="45" name="dhcp_gateway" value="%dhcp_gateway%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                     <tr>
+                        <td>dhcp_netmask:</td>
+                        <td> <input id="dhcp_netmask" type="text" maxlength="32" size="45" name="dhcp_netmask" value="%dhcp_netmask%" onchange="updateControl( this.id, this.value )"> </td>
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      </div>
+   </body>
+</html>
