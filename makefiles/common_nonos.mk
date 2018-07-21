@@ -182,8 +182,6 @@ endif
 # compiler flags using during compilation of source files
 
 CFLAGS   += \
-            -Os \
-            -ggdb \
             -std=gnu99\
             -Werror \
             -Wpointer-arith \
@@ -209,13 +207,10 @@ CFLAGS   += \
             -D__ets__ \
             -DICACHE_FLASH
 
-#            -O2 \
 #            -mno-serialize-volatile \
 
 CXXFLAGS += \
-            -Os \
             -g \
-            -O2 \
             -Wpointer-arith \
             -Wundef \
             -Werror \
@@ -229,6 +224,24 @@ CXXFLAGS += \
             -fno-rtti \
             -fno-exceptions \
             -DICACHE_FLASH
+
+ifeq ("$(DEBUG_USE_GDB)", "yes")
+   CFLAGS   += \
+               -Og \
+               -ggdb \
+               -DDEBUG_USE_GDB
+
+   CXXFLAGS += \
+               -Og \
+               -ggdb \
+               -DDEBUG_USE_GDB
+else
+   CFLAGS   += \
+               -Os
+
+   CXXFLAGS += \
+               -Os
+endif
 
 # linker flags used to generate the main object file
 LDFLAGS += \
@@ -314,10 +327,13 @@ SDK_LIBDIR      := $(addprefix $(SDK_BASE),$(SDK_LIBDIR))
 
 C_SRC           := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c))
 CPP_SRC         := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.cpp))
-SRC             := $(C_SRC) $(CPP_SRC)
-C_OBJ           := $(patsubst %.c,%.o,$(SRC))
-CXX_OBJ         := $(patsubst %.cpp,%.o,$(C_OBJ))
-OBJ             := $(patsubst $(SOURCE_DIR_BASE)%.o,$(BUILD_DIR_BASE)%.o,$(CXX_OBJ))
+ASM_SRC         := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.S))
+SRC             := $(C_SRC) $(CPP_SRC) $(ASM_SRC)
+C_OBJ           := $(patsubst %.c,%.o,$(C_SRC))
+CXX_OBJ         := $(patsubst %.cpp,%.o,$(CPP_SRC))
+ASM_OBJ         := $(patsubst %.S,%.o,$(ASM_SRC))
+OBJ             := $(patsubst $(SOURCE_DIR_BASE)%.o,$(BUILD_DIR_BASE)%.o,$(C_OBJ) $(CPP_OBJ) $(ASM_OBJ))
+
 LIBS            := $(addprefix -l,$(LIBS))
 APP_AR          := $(addprefix $(BUILD_DIR_BASE),$(TARGET)_app.a)
 TARGET_OUT      := $(addprefix $(BUILD_DIR_BASE),$(TARGET).out)
@@ -363,6 +379,7 @@ endif
 
 vpath %.c $(SRC_DIR)
 vpath %.cpp $(SRC_DIR)
+vpath %.S $(SRC_DIR)
 
 # --------------------------------------------------------------------------
 #  The Rules
@@ -374,10 +391,14 @@ $(BUILD_DIR_BASE)$1/%.o: $$(SOURCE_DIR_BASE)$1/%.c
 	$(vecho) "CC $$<"
 	$(cecho) "$(CC) -MMD -MP $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $$(CFLAGS) -c $$< -o $$@"
 	$(Q)      $(CC) -MMD -MP $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $$(CFLAGS) -c $$< -o $$@
-$1/%.o: %.cpp
+$(BUILD_DIR_BASE)$1/%.o: $$(SOURCE_DIR_BASE)$1/%.cpp
 	$(vecho) "C+ $$<"
 	$(cecho) "$(CXX) -MMD -MP $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $(CXXFLAGS)  -c $$< -o $$@"
 	$(Q)      $(CXX) -MMD -MP $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $(CXXFLAGS)  -c $$< -o $$@
+$(BUILD_DIR_BASE)$1/%.o: $$(SOURCE_DIR_BASE)$1/%.S
+	$(vecho) "ASM $$<"
+	$(cecho) "$(CC) -D__ASSEMBLER__ -MMD -MP $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $$(CFLAGS) -c $$< -o $$@"
+	$(Q)      $(CC) -D__ASSEMBLER__ -MMD -MP $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $$(CFLAGS) -c $$< -o $$@
 endef
 
 # --------------------------------------------------------------------------
@@ -509,6 +530,9 @@ showdirs:
 	@echo "    BUILD_DIR:      "$(BUILD_DIR)
 	@echo "    FW_DIR_BASE:    "$(FW_DIR_BASE)
 	@echo "    SRC_DIR:        "$(SRC_DIR)
+	@echo "    C_SRC:          "$(C_SRC)
+	@echo "    CPP_SRC:        "$(CPP_SRC)
+	@echo "    ASM_SRC:        "$(ASM_SRC)
 	@echo "    SRC:            "$(SRC)
 	@echo "    APP_AR:         "$(APP_AR)
 	@echo "-----------------------------------------"
@@ -516,6 +540,9 @@ showdirs:
 	@echo "    EXTRA_INCDIR:   "$(EXTRA_INCDIR)
 	@echo "    MODULE_INCDIR:  "$(MODULE_INCDIR)
 	@echo "-----------------------------------------"
+	@echo "    C_OBJ:          "$(C_OBJ)
+	@echo "    CPP_OBJ:        "$(CPP_OBJ)
+	@echo "    ASM_OBJ:        "$(ASM_OBJ)
 	@echo "    OBJ:            "$(OBJ)
 	@echo "    DEPS:           "$(DEPS)
 	@echo "-----------------------------------------"

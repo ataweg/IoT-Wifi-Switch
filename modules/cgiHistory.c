@@ -33,14 +33,10 @@ static const char* TAG = "modules/cgiHistory.c";
 //
 // --------------------------------------------------------------------------
 
-#include <osapi.h>
-#include <user_interface.h>
-#include <stdarg.h>
-
-#include "esp_missing.h"  // os_snprintf(), ets_vsnprintf()
-#include "libesphttpd/httpd.h"
-#include "configs.h"
-#include "cgiTimer.h"       // ID_HISTORY
+#include "esp_missing.h"            // ets_vsnprintf()
+#include "libesphttpd/httpd.h"      // CgiStatus, malloc(), ...
+#include "configs.h"                // struct cfg_mode_t
+#include "cgiTimer.h"               // ID_HISTORY
 #include "cgiHistory.h"
 
 // --------------------------------------------------------------------------
@@ -94,7 +90,7 @@ static int ICACHE_FLASH_ATTR historyGet( uint32_t *cfg_data, int len, uint32_t r
    cfg_mode_t *cfg_mode = ( cfg_mode_t * )cfg_data;  // not used here
    cfg_data++;
 
-   os_memcpy( history, cfg_data, sizeof( history_t ) );
+   memcpy( history, cfg_data, sizeof( history_t ) );
 
    if( history->id != ID_HISTORY )
       return false;
@@ -152,10 +148,10 @@ CgiStatus ICACHE_FLASH_ATTR tplHistory( HttpdConnData *connData, char *token, vo
       return HTTPD_CGI_DONE;
    }
 
-   os_strcpy( buf, "Unknown [" );
-   os_strcat( buf, token );
-   os_strcat( buf, "]" );
-   buflen = os_strlen( buf );
+   strcpy( buf, "Unknown [" );
+   strcat( buf, token );
+   strcat( buf, "]" );
+   buflen = strlen( buf );
 
    int remaining = httpdSend( connData, NULL, 0 ); // get free spece in send bufffer
 
@@ -196,7 +192,7 @@ CgiStatus ICACHE_FLASH_ATTR tplHistory( HttpdConnData *connData, char *token, vo
          history_t history;
          uint32_t addr = ringbuf->rd_addr_buf[ ringbuf->index ];
          user_config_read( addr, ( char * )&history, sizeof( history_t ) );
-         buflen = os_snprintf( buf, PRE_COL_SIZE,   // 61 bytes
+         buflen = snprintf( buf, PRE_COL_SIZE,   // 61 bytes
                      "<tr%s>\r\n"      // " class=\"alt\" "
                         "<td>"
                            "%d"        // count
@@ -227,7 +223,7 @@ CgiStatus ICACHE_FLASH_ATTR tplHistory( HttpdConnData *connData, char *token, vo
          {
             if( *_buf == '\t' )
             {
-               os_strcpy( buf_end,    // 11 bytes
+               strcpy( buf_end,    // 11 bytes
                         "</td>\r\n"
                         "<td>" );
                while( *buf_end )    // get end of string
@@ -245,7 +241,7 @@ CgiStatus ICACHE_FLASH_ATTR tplHistory( HttpdConnData *connData, char *token, vo
          }
 
          // terminate column
-         os_strcpy( buf_end,
+         strcpy( buf_end,
                      "</td>\r\n"
                   "</tr>\r\n" );
          while( *buf_end )    // get length of string
@@ -298,18 +294,19 @@ CgiStatus ICACHE_FLASH_ATTR tplHistory( HttpdConnData *connData, char *token, vo
 
 static uint32_t ICACHE_FLASH_ATTR saveHistory( char *str, int len )
 {
-   // ESP_LOGD( TAG, "saveHistory '%s', len %d", S( str + sizeof( history_t* ) ), len );
+   // ESP_LOGD( TAG, "saveHistory '%s', len %d", S( str + sizeof( history_t ) ), len );
 
    history_t* new_msg = ( history_t* )str;
 
    if( len == 0 )
-      len = strlen( str + sizeof( history_t* ) );
+      len = strlen( str + sizeof( history_t ) );
 
    new_msg->id   = ID_HISTORY;
    new_msg->type = 0xFF;      // unused
    new_msg->dmy  = 0xFF;      // unused
    new_msg->len  = len + 1;   // save also terminating zero
    new_msg->time = sntp_gettime();
+
    uint32_t wr_addr = (uint32_t )config_save_str( ID_EXTRA_DATA_TEMP, (char *)new_msg, new_msg->len + sizeof( history_t ), Structure );
 
    return wr_addr;

@@ -89,7 +89,7 @@ extern wifi_dhcp_cfg_t   Wifi_Dhcp_Cfg;
 //
 // --------------------------------------------------------------------------
 
-Configuration_Item_t * init_wifi_config( void );
+Configuration_Item_t* ICACHE_FLASH_ATTR init_wifi_config( void );
 
 CgiStatus ICACHE_FLASH_ATTR tplWifiConfig( HttpdConnData *connData, char *token, void **arg );
 

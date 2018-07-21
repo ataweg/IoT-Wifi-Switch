@@ -56,6 +56,8 @@ static const char *TAG = "cgiwifi";
 //
 // --------------------------------------------------------------------------
 
+#include <stdlib.h>  // atoi()
+
 #include <libesphttpd/esp.h>
 #include "libesphttpd/cgiwifi.h"
 
@@ -527,9 +529,9 @@ CgiStatus ICACHE_FLASH_ATTR tplWlan( HttpdConnData *connData, char *token, void 
    if( token == NULL ) return HTTPD_CGI_DONE;
    wifi_station_get_config( &stconf );
 
-   os_strcpy( buf, "Unknown [" );
-   os_strcat( buf, token );
-   os_strcat( buf, "]" );
+   strcpy( buf, "Unknown [" );
+   strcat( buf, token );
+   strcat( buf, "]" );
 
    if( strcmp( token, "WiFiMode" ) == 0 )
    {

@@ -27,10 +27,11 @@ static const char *TAG = "modules/events.c";
 //
 // --------------------------------------------------------------------------
 
-#include <osapi.h>               // os_printf()
+#include <osapi.h>               // printf()
 #include <user_interface.h>      // system_get_time()
-#include <mem.h>                 // os_malloc
+#include <mem.h>                 // malloc
 
+#include "os_platform.h"         // malloc(), ...
 #include "events.h"
 
 // --------------------------------------------------------------------------
@@ -67,7 +68,7 @@ appl_event_item_t* ICACHE_FLASH_ATTR appl_addEventCb( uint32_t event, appl_event
 {
    // ESP_LOGD( TAG, "appl_addEventCb for %d func: 0x%08x", event,cb );
 
-   appl_event_item_t * new_item = ( appl_event_item_t * )os_malloc( sizeof( appl_event_item_t ) );
+   appl_event_item_t * new_item = ( appl_event_item_t * )malloc( sizeof( appl_event_item_t ) );
 
    if( new_item != NULL )
    {
@@ -108,6 +109,6 @@ void ICACHE_FLASH_ATTR appl_removeEventCb( appl_event_item_t *item)
    if( item == appl_event_list )
       appl_event_list = next;
 
-   os_free( item );
+   free( item );
 }
 

@@ -21,16 +21,18 @@ void *pvPortMalloc( size_t sz, const char *, unsigned, bool );
 void vPortFree( void *p, const char *, unsigned );
 void *pvPortZalloc( size_t sz, const char *, unsigned );
 void *pvPortRealloc( void *p, size_t n, const char *, unsigned );
-void *pvPortCalloc( size_t, size_t, const char *, unsigned );
+void *pvPortCalloc( size_t count, size_t size, const char *, unsigned );
+void *pvPortCallocIram( size_t count,size_t size,const char *,unsigned );
+void *pvPortZallocIram( size_t sz, const char *, unsigned );
 
 #if !defined( MEMLEAK_DEBUG ) || defined( NO_DBG_MEMLEAKS )
    #define MEMLEAK_DEBUG_ENABLE   0
    #define os_free( s )          vPortFree( s, "", __LINE__ )
    #define os_malloc( s )        pvPortMalloc( s, "", __LINE__, true )
    #define os_malloc_dram( s )   pvPortMalloc( s, "", __LINE__, false )
-   #define os_calloc( l, s)      pvPortCalloc( l, s, "", __LINE__)
+   #define os_calloc( l, s)      pvPortCallocIram( l, s, "", __LINE__)
    #define os_realloc( p, s )    pvPortRealloc( p, s, "", __LINE__ )
-   #define os_zalloc( s )        pvPortZalloc( s, "", __LINE__ )
+   #define os_zalloc( s )        pvPortZallocIram( s, "", __LINE__ )
 #else
    void *dbg_malloc( size_t sz, const char *, unsigned, bool );
    void  dbg_free( void *p, const char *, unsigned );

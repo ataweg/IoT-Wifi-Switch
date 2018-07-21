@@ -28,6 +28,9 @@ static const char *TAG = "device_control";
 
 #include <string.h>
 
+#include <osapi.h>
+#include "user_interface.h"
+
 #include "device_control.h"
 #include "device.h"     // devGet(), devSet();
 
@@ -41,7 +44,7 @@ const Config_Keyword_t ICACHE_RODATA_ATTR DeviceControl_Keywords[] ICACHE_RODATA
 {
    { { 0,          Number,     0, 0 }, "sys_led     "        },  // SysLed
    { { 1,          Number,     0, 0 }, "info_led"            },  // InfoLed
-   { { 2,          Number,     0, 0 }, "relay_switch"        },  // Relay
+   { { 2,          Number,     0, 0 }, "switch_relay"        },  // Relay
    { { 2,          Number,     0, 0 }, "power_sense"         },  // PowerSense
 };
 
@@ -138,7 +141,7 @@ int ICACHE_FLASH_ATTR device_apply_control( int id, char *str, int value )
 
 static Configuration_Item_t cfgItem;
 
-Configuration_Item_t *init_device_control( void )
+Configuration_Item_t* ICACHE_FLASH_ATTR init_device_control( void )
 {
    cfgItem.config_keywords = DeviceControl_Keywords;
    cfgItem.num_keywords    = sizeof( DeviceControl_Keywords ) / sizeof( Config_Keyword_t );

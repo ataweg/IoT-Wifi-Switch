@@ -39,31 +39,37 @@ static const char *TAG = "user/user_main.c";
 //
 // --------------------------------------------------------------------------
 
-#include <osapi.h>
+#include <osapi.h>            // os_printf()
 #include <user_interface.h>
 #include <driver/uart.h>
-#include <espconn.h>          // espconn_tcp_set_max_con()
 #include "mem.h"
 
 #include "user_config.h"
 #include "esp_missing.h"      // os_snprintf()
+#include "os_platform.h"      // printf(), malloc(), ...
 
 #include "user_button.h"      // buttonInit()
 #include "user_sntp.h"        // user_snpt_init()
-#include "user_mqtt.h"        // mqttInit()
+#include "user_wifi.h"        // wifiInit()
 #include "user_httpd.h"       // httpdInit()
-#include "user_wifi.h"
+#include "user_mqtt.h"        // mqttInit()
+
 #include "cgiTimer.h"
 #include "cgiHistory.h"
 
-#include "leds.h"
 #include "configs.h"
 #include "wifi_config.h"
 #include "mqtt_config.h"
-#include "device.h"           // getDev()
 #include "device_control.h"
+
+#include "device.h"           // devGet()
 #include "rtc.h"              // rtc_init()
+#include "leds.h"
 #include "io.h"               // io_pins_init()
+
+#ifdef DEBUG_USE_GDB
+   #include "gdbstub.h"
+#endif
 
 // --------------------------------------------------------------------------
 //
@@ -129,29 +135,29 @@ bool ICACHE_FLASH_ATTR check_memleak_debug_enable(void)
 
 void ICACHE_FLASH_ATTR systemPrintInfo()
 {
-   os_printf( "\r\n\r\n" );
-   os_printf( "-------------------------------------------\r\n" );
-   os_printf( "BOOTUP...\r\n" );
-   os_printf( "\r\n" );
-   os_printf( "ESP8266 platform starting...\r\n" );
-   os_printf( "==== System info: ====\r\n" );
-   os_printf( "SDK version:    %s  rom %d\r\n", system_get_sdk_version(), system_upgrade_userbin_check() );
-   os_printf( "Project:        IoT-Wifi-Switch ( ESP8266 )\r\n" );
-   os_printf( "Device:         " TARGET_DEVICE "\r\n" );
-   os_printf( "Build time:     %s\r\n", _sntp_get_real_time( build_time ) );
-   os_printf( "Build number:   %u\r\n", build_number );
-   os_printf( "Time:           %d ms\r\n", system_get_time()/1000 );
-   os_printf( "Chip id:        0x%x\r\n", system_get_chip_id() );
-   os_printf( "CPU freq:       %d MHz\r\n", system_get_cpu_freq() );
-   os_printf( "Flash size map: %d\r\n", system_get_flash_size_map() );
-   os_printf( "Free heap size: %d\r\n", system_get_free_heap_size() );
-   os_printf( "Memory info:\r\n" );
+   printf( "\r\n\r\n" );
+   printf( "-------------------------------------------\r\n" );
+   printf( "BOOTUP...\r\n" );
+   printf( "\r\n" );
+   printf( "ESP8266 platform starting...\r\n" );
+   printf( "==== System info: ====\r\n" );
+   printf( "SDK version:    %s  rom %d\r\n", system_get_sdk_version(), system_upgrade_userbin_check() );
+   printf( "Project:        IoT-Wifi-Switch ( ESP8266 )\r\n" );
+   printf( "Device:         " TARGET_DEVICE "\r\n" );
+   printf( "Build time:     %s\r\n", _sntp_get_real_time( build_time ) );
+   printf( "Build number:   %u\r\n", build_number );
+   printf( "Time:           %d ms\r\n", system_get_time()/1000 );
+   printf( "Chip id:        0x%x\r\n", system_get_chip_id() );
+   printf( "CPU freq:       %d MHz\r\n", system_get_cpu_freq() );
+   printf( "Flash size map: %d\r\n", system_get_flash_size_map() );
+   printf( "Free heap size: %d\r\n", system_get_free_heap_size() );
+   printf( "Memory info:\r\n" );
    system_print_meminfo();
 #ifdef MEMLEAK_DEBUG
-   os_printf( "Using MEMLEAK_DEBUG ...\r\n" );
+   printf( "Using MEMLEAK_DEBUG ...\r\n" );
 #endif
-   os_printf( " ==== End System info ====\r\n" );
-   os_printf( " -------------------------------------------\r\n\r\n" );
+   printf( " ==== End System info ====\r\n" );
+   printf( " -------------------------------------------\r\n\r\n" );
 }
 
 // --------------------------------------------------------------------------
@@ -213,6 +219,11 @@ void ICACHE_FLASH_ATTR systemTimer100msTask( void *arg )
       {
          ESP_LOG( TAG, "System is ready" );
          system_flag.system_ready = true;
+         if( devGet( Relay ) != cur_power_state )
+         {
+            ESP_LOG( TAG, "Adjust relay to power state %s", cur_power_state ? "on" : "off" );
+            devSet( Relay, cur_power_state );
+         }
       }
 
       if( cur_power_state )
@@ -256,8 +267,8 @@ static void ICACHE_FLASH_ATTR systemReadyCb( void )
    wifiInit();
 
    HEAP_INFO( "" );
-   os_printf( "\nsystem ready ..." );
-   os_printf( "\nvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n" );
+   printf( "\nsystem ready ..." );
+   printf( "\nvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n" );
 }
 
 /******************************************************************************
@@ -320,7 +331,7 @@ uint32_t ICACHE_FLASH_ATTR user_rf_cal_sector_set( void )
 
 void ICACHE_FLASH_ATTR user_rf_pre_init( void )
 {
-   os_printf( "\r\n\r\n" );
+   printf( "\r\n\r\n" );
    ESP_LOGI( TAG, "user_rf_pre_init ..." );
 
    uint8_t esp_init_data_current[ sizeof( esp_init_data_default ) ];
@@ -422,6 +433,11 @@ void ICACHE_FLASH_ATTR user_init( void )
 
    HEAP_INFO( "" );
 
+#ifdef DEBUG_USE_GDB
+   printf( "\r\ngdb is enabled\r\n" );
+   gdbstub_init( true );
+#endif
+
    // ----------------------------------
    // setup configuration
    // ----------------------------------
@@ -467,6 +483,6 @@ void ICACHE_FLASH_ATTR user_init( void )
 
    history( "Reset\treason: %x: %s", sys_rst_info->reason, reason2Str( sys_rst_info->reason ) );
    HEAP_INFO( "" );
-   os_printf( "\nready ..." );
-   os_printf( "\n--------------------------------------------------------------------------\n" );
+   printf( "\nready ..." );
+   printf( "\n--------------------------------------------------------------------------\n" );
 }

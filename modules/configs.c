@@ -37,14 +37,25 @@ static const char *TAG = "modules/configs.c";
 //
 // --------------------------------------------------------------------------
 
-#include <osapi.h>
-#include <user_interface.h>
-#include <stdlib.h> /* strtol() */
+#ifdef ESP_PLATFORM
+   #include <stdio.h>               // printf()
+   #include <string.h>              // memcpy()
 
-#include "ip_addr.h"  // IP2STR, IPSTR, IP4_ADDR()
+   #include "esp_types.h"
+   #include "esp_spi_flash.h"
+   #include "lwip/ip_addr.h"        // IP4_ADDR()
+   #include "tcpip_adapter.h"       // IPSTR, IP2STR()
+#else
+   #include <stdlib.h>              // strtol()
 
-#include "user_config.h"
-#include "mem.h"           // os_zalloc()
+   #include <osapi.h>
+   #include <user_interface.h>
+   #include "os_platform.h"         // malloc(), ...
+
+   #include "ip_addr.h"             // IP2STR, IPSTR, IP4_ADDR()
+   #include "mem.h"                 // os_zalloc()
+#endif
+
 
 #include "configs.h"
 
@@ -216,7 +227,7 @@ void ICACHE_FLASH_ATTR config_build_list( Configuration_List_t *cfg_list, int nu
    // first parse default settings, then go to the user settings in the
    // configuration section of the flash
 
-   config_list = ( settings_t * )os_zalloc( sizeof( settings_t ) * ID_MAX );
+   config_list = ( settings_t * )zalloc( sizeof( settings_t ) * ID_MAX );
 
    Configuration_List = cfg_list;
    Num_Configurations = num_cfgs;
@@ -264,7 +275,7 @@ static int ICACHE_FLASH_ATTR config_get_defaults( const_settings_t *defaults )
 
       ASSERT( "Src isn't 32bit aligned", ( ( uint32_t )( &defaults[ i ].mode ) & 3 ) == 0 );
       ASSERT( "Dest isn't 32bit aligned", ( ( uint32_t )( &cfg_mode ) & 3 ) == 0 );
-      os_memcpy( &cfg_mode, &defaults[ i ].mode, sizeof( cfg_mode ) );
+      memcpy( &cfg_mode, &defaults[ i ].mode, sizeof( cfg_mode ) );
 
       if( cfg_mode.mode == 0xFFFFFFFF ) // end of list
       {
@@ -278,7 +289,7 @@ static int ICACHE_FLASH_ATTR config_get_defaults( const_settings_t *defaults )
             // copy mode and pointer to the text
             ASSERT( "Src isn't 32bit aligned", ( ( uint32_t )( &defaults[ i ] ) & 3 ) == 0 );
             ASSERT( "Dest isn't 32bit aligned", ( ( uint32_t )( &config_list[ cfg_mode.id ] ) & 3 ) == 0 );
-            os_memcpy( &config_list[ cfg_mode.id ], &defaults[ i ], sizeof( settings_t ) );
+            memcpy( &config_list[ cfg_mode.id ], &defaults[ i ], sizeof( settings_t ) );
          }
          else if( cfg_mode.type == NumArray )
          {
@@ -287,7 +298,7 @@ static int ICACHE_FLASH_ATTR config_get_defaults( const_settings_t *defaults )
             int len = cfg_mode.len;
             int len4  = ( len + 3 ) & ~3;
 
-            char *buf = os_malloc( len4 );
+            char *buf = malloc( len4 );
             if( buf == NULL )
             {
                // ESP_LOGE( TAG, "cannot allocate memory for \"buf\"" );
@@ -297,7 +308,7 @@ static int ICACHE_FLASH_ATTR config_get_defaults( const_settings_t *defaults )
                // copy the value string from the defaults to buf
                ASSERT( "Src isn't 32bit aligned", ( ( uint32_t )defaults[ i ].text & 3 ) == 0 );
                ASSERT( "Dest isn't 32bit aligned", ( ( uint32_t )buf & 3 ) == 0 );
-               os_memcpy( buf, defaults[ i ].text, len4 );
+               memcpy( buf, defaults[ i ].text, len4 );
                buf[ len ] = 0;  // terminate the string
 
                // determine the number of integers in the text string
@@ -315,13 +326,13 @@ static int ICACHE_FLASH_ATTR config_get_defaults( const_settings_t *defaults )
                      if( cnt != size_array )
                      {
                         // not enough space to store the values into array
-                        os_free( val_array );
+                        free( val_array );
                         val_array = NULL;
                      }
                   }
 
                   if( val_array == NULL )
-                     val_array = ( int * ) os_malloc( sizeof( int ) * cnt );
+                     val_array = ( int * ) malloc( sizeof( int ) * cnt );
 
                   if( val_array != NULL )
                      str2int_array( buf, val_array, cnt );
@@ -332,7 +343,7 @@ static int ICACHE_FLASH_ATTR config_get_defaults( const_settings_t *defaults )
                   config_list[ cfg_mode.id ].mode = cfg_mode.mode;
                   config_list[ cfg_mode.id ].text = ( char * )val_array;
 
-                  os_free( buf );
+                  free( buf );
                }
                else
                {
@@ -353,7 +364,7 @@ static int ICACHE_FLASH_ATTR config_get_defaults( const_settings_t *defaults )
 
             ASSERT( "Src isn't 32bit aligned", ( ( uint32_t )defaults[ i ].text & 3 ) == 0 );
             ASSERT( "Dest isn't 32bit aligned", ( ( uint32_t )buf & 3 ) == 0 );
-            os_memcpy( buf, defaults[ i ].text, len4 );
+            memcpy( buf, defaults[ i ].text, len4 );
             buf[ len ] = 0;  // zero terminate string
 
             if( cfg_mode.type == Number )
@@ -409,7 +420,7 @@ int ICACHE_FLASH_ATTR config_get( int id, char *buf, int buf_size )
       ASSERT( "Src isn't 32bit aligned", ( ( uint32_t )config_list[ id ].text & 3 ) == 0 );
       // ESP_LOGD( TAG, "get config id 0x%02x  mode 0x%08x len %d addr 0x%08x ", id, config_list[ id ].mode, len, config_list[ id ].text );
       if( config_list[ id ].valid == DEFAULT_RECORD )
-         os_memcpy( buf, config_list[ id ].text, len4 );
+         memcpy( buf, config_list[ id ].text, len4 );
       else if( config_list[ id ].valid == SPI_FLASH_RECORD )
          user_config_read( ( uint32_t )config_list[ id ].text, buf, len4 );
       else
@@ -480,7 +491,7 @@ void ICACHE_FLASH_ATTR config_print_settings( void )
             ASSERT( "Dest isn't 32bit aligned", ( ( uint32_t )buf & 3 ) == 0 );
             if( config_list[ i ].valid == DEFAULT_RECORD )
             {
-               os_memcpy( buf, config_list[ i ].text, len4 );
+               memcpy( buf, config_list[ i ].text, len4 );
             }
             else
             {
@@ -490,40 +501,42 @@ void ICACHE_FLASH_ATTR config_print_settings( void )
             if( cfg_mode.type == Text )
             {
                buf[ len ] = 0;  // zero terminate string
-               os_printf( "%3d: id 0x%02x Text     len %3d \"%s\"\r\n", i, cfg_mode.id, len, buf );
+               printf( "%3d: id 0x%02x Text     len %3d \"%s\"\r\n", i, cfg_mode.id, len, buf );
             }
             else
             {
                int num_vals = cfg_mode.len / sizeof( int );
-               os_printf( "%3d: id 0x%02x NumArray len %3d ", i, cfg_mode.id, num_vals );
+               printf( "%3d: id 0x%02x NumArray len %3d ", i, cfg_mode.id, num_vals );
                int *val_array = ( int * )buf;
                for( int j = 0; j < num_vals; j++ )
                {
-                  os_printf( "%d, ",  val_array[ j ] );
+                  printf( "%d, ",  val_array[ j ] );
                }
-               os_printf( "\r\n" );
+               printf( "\r\n" );
             }
          }
          else if( cfg_mode.type == Number )
          {
             val = config_list[ i ].val;
-            os_printf( "%3d: id 0x%02x Number         %d\r\n", i, cfg_mode.id, val );
+            printf( "%3d: id 0x%02x Number         %d\r\n", i, cfg_mode.id, val );
          }
          else if( cfg_mode.type == Ip_Addr )
          {
             val = config_list[ i ].val;
-            os_printf( "%3d: id 0x%02x Ip_Addr        "IPSTR"\r\n", i, cfg_mode.id, IP2STR( &val ) );
+            printf( "%3d: id 0x%02x Ip_Addr        "IPSTR"\r\n", i, cfg_mode.id, IP2STR( &val ) );
          }
          else if( cfg_mode.type == Flag )
          {
             val = config_list[ i ].val;
-            os_printf( "%3d: id 0x%02x Flag           %s\r\n", i, cfg_mode.id, val == 0 ? "false" : "true" );
+            printf( "%3d: id 0x%02x Flag           %s\r\n", i, cfg_mode.id, val == 0 ? "false" : "true" );
          }
          else
          {
             val = 0;
          }
       }
+
+      system_soft_wdt_feed();
    }
 }
 
@@ -599,7 +612,7 @@ static int ICACHE_FLASH_ATTR config_get_user( void )
    int rc = working;
 
    if( user_settings.buf == NULL )
-      user_settings.buf = ( uint32_t* ) os_malloc( SPI_FLASH_SEC_SIZE );
+      user_settings.buf = ( uint32_t* ) malloc( SPI_FLASH_SEC_SIZE );
 
    if( user_settings.buf != NULL )
    {
@@ -697,7 +710,7 @@ static int ICACHE_FLASH_ATTR config_get_user( void )
          }
       }
 
-      os_free( user_settings.buf );
+      free( user_settings.buf );
       user_settings.buf = NULL;
    }
 
@@ -953,7 +966,7 @@ int ICACHE_FLASH_ATTR user_config_read( uint32_t addr, char *buf, int len )
          uint32_t last;
          // ESP_LOGD( TAG, "spi_flash_read %d, 0x%04x", len, rd_addr );
          spi_flash_read( rd_addr, &last, sizeof( last ) );
-         os_memcpy( buf, &last, len );
+         memcpy( buf, &last, len );
          addr += len;
          buf += len;
          len = 0;
@@ -1012,7 +1025,7 @@ int ICACHE_FLASH_ATTR user_config_write( uint32_t addr, char *str, int len )
       else if( len < 4 )
       {
          uint32_t last = 0;
-         os_memcpy( &last, str, len );
+         memcpy( &last, str, len );
          // ESP_LOGD( TAG, "spi flash write %d, 0x%04x", len, wr_addr );
          spi_flash_write( wr_addr, &last, sizeof( last ) );
          addr += len;
@@ -1059,7 +1072,7 @@ char* ICACHE_FLASH_ATTR config_save_str( int id, char *str, int len, int type )
 
    // write new str to the user configuration section in the flash
    uint32_t wr_addr = config_save( cfg_mode, str, 0 );
-   if( wr_addr > 0 && id != ID_EXTRA_DATA )
+   if( wr_addr > 0 && id < ID_MAX )
    {
       // update config_list
       config_list[ id ].mode = cfg_mode.mode;
@@ -1288,7 +1301,7 @@ int ICACHE_FLASH_ATTR user_config_print( void )
    int rc = working;
 
    if( user_settings.buf == NULL )
-      user_settings.buf = ( uint32_t* ) os_malloc( SPI_FLASH_SEC_SIZE );
+      user_settings.buf = ( uint32_t* ) malloc( SPI_FLASH_SEC_SIZE );
 
    if( user_settings.buf != NULL )
    {
@@ -1299,9 +1312,9 @@ int ICACHE_FLASH_ATTR user_config_print( void )
       {
          uint32_t rd_addr = user_settings.start;      // 8 .. 0x2FFF
 
-         os_printf( "\r\n+--------+------+----------+-----+-----+------------------------\r\n" );
-         os_printf(     "| Addr   | id   | Type     |valid| Len | Value\r\n" );
-         os_printf(     "+--------+------+----------+-----+-----+------------------------\r\n" );
+         printf( "\r\n+--------+------+----------+-----+-----+------------------------\r\n" );
+         printf(     "| Addr   | id   | Type     |valid| Len | Value\r\n" );
+         printf(     "+--------+------+----------+-----+-----+------------------------\r\n" );
 
          int i = 0;
          for( i = 0; i < CFG_DATA_NUM_BLOCKS; i++ )
@@ -1330,7 +1343,7 @@ int ICACHE_FLASH_ATTR user_config_print( void )
 
                if( cfg_mode.mode == 0xFFFFFFFF ) // end of list
                {
-                  os_printf( "+--------+------+----------+-----+-----+------------------------\r\n\r\n" );
+                  printf( "+--------+------+----------+-----+-----+------------------------\r\n\r\n" );
 
                   rc = done;
                   break;
@@ -1354,7 +1367,7 @@ int ICACHE_FLASH_ATTR user_config_print( void )
                      int len = cfg_mode.len;
                      int len4 = align_len( sizeof( buf ), &len );
 
-                     os_memcpy( buf, buf32, len4 );
+                     memcpy( buf, buf32, len4 );
                      rd_addr += len4;
                      buf32 += len4 / sizeof( uint32_t );
                      num_words -= len4 / sizeof( uint32_t );
@@ -1365,40 +1378,40 @@ int ICACHE_FLASH_ATTR user_config_print( void )
                      if( cfg_mode.type == Text )
                      {
                         buf[ len ] = 0;  // zero terminate string
-                        os_printf( "| 0x%04x | 0x%02x | Text     |  %2d | %3d | \"%s\"\r\n", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, len, buf );
+                        printf( "| 0x%04x | 0x%02x | Text     |  %2d | %3d | \"%s\"\r\n", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, len, buf );
                      }
                      else if( cfg_mode.type == NumArray )
                      {
-                        os_printf( "| 0x%04x | 0x%02x | NumArray |  %2d | %3d | ", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, len );
+                        printf( "| 0x%04x | 0x%02x | NumArray |  %2d | %3d | ", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, len );
                         int *val_array = ( int * )buf;
                         int num_vals = ( cfg_mode.len + sizeof( int ) - 1 ) / sizeof( int );
                         for( int j = 0; j < num_vals; j++ )
                         {
-                           os_printf( "%d, ",  val_array[ j ] );
+                           printf( "%d, ",  val_array[ j ] );
                         }
-                        os_printf( "\r\n" );
+                        printf( "\r\n" );
                      }
                      else if( cfg_mode.type == Structure )
                      {
-                        os_printf( "| 0x%04x | 0x%02x | Structure|  %2d | %3d | ", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, len );
+                        printf( "| 0x%04x | 0x%02x | Structure|  %2d | %3d | ", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, len );
                         uint32_t *val_array = ( uint32_t * )buf;
                         int num_vals = ( cfg_mode.len + sizeof( int ) - 1 ) / sizeof( int );
                         for( int j = 0; j < num_vals; j++ )
                         {
-                           os_printf( "0x%08x, ",  val_array[ j ] );
+                           printf( "0x%08x, ",  val_array[ j ] );
                         }
-                        os_printf( "\r\n" );
+                        printf( "\r\n" );
                      }
                      else if( cfg_mode.type == FillData )
                      {
-                        os_printf( "| 0x%04x | 0x%02x | FillData |  %2d | %3d | ", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, len );
+                        printf( "| 0x%04x | 0x%02x | FillData |  %2d | %3d | ", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, len );
                         uint32_t *val_array = ( uint32_t * )buf;
                         int num_vals = ( cfg_mode.len + sizeof( int ) - 1 ) / sizeof( int );
                         for( int j = 0; j < num_vals; j++ )
                         {
-                           os_printf( "0x%08x, ",  val_array[ j ] );
+                           printf( "0x%08x, ",  val_array[ j ] );
                         }
-                        os_printf( "\r\n" );
+                        printf( "\r\n" );
                      }
                   }
                   else
@@ -1410,19 +1423,19 @@ int ICACHE_FLASH_ATTR user_config_print( void )
 
                      if( cfg_mode.type == Number )
                      {
-                        os_printf( "| 0x%04x | 0x%02x | Number   |  %2d |     | 0x%08x : %10d\r\n", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, val, val );
+                        printf( "| 0x%04x | 0x%02x | Number   |  %2d |     | 0x%08x : %10d\r\n", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, val, val );
                      }
                      else if( cfg_mode.type == Ip_Addr )
                      {
-                        os_printf( "| 0x%04x | 0x%02x | Ip_Addr  |  %2d |     | "IPSTR"\r\n", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, IP2STR( ( uint8_t* )&val ) );
+                        printf( "| 0x%04x | 0x%02x | Ip_Addr  |  %2d |     | "IPSTR"\r\n", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, IP2STR( ( uint8_t* )&val ) );
                      }
                      else if( cfg_mode.type == Flag )
                      {
-                        os_printf( "| 0x%04x | 0x%02x | Flag     |  %2d |     | %s\r\n", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, val == 0 ? "false" : "true" );
+                        printf( "| 0x%04x | 0x%02x | Flag     |  %2d |     | %s\r\n", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, val == 0 ? "false" : "true" );
                      }
                      else
                      {
-                        os_printf( "| 0x%04x | 0x%02x | Unknown  |  %2d |     | 0x%08x : %10d\r\n", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, val, val );
+                        printf( "| 0x%04x | 0x%02x | Unknown  |  %2d |     | 0x%08x : %10d\r\n", id_addr, cfg_mode.id, cfg_mode.valid & 0xF, val, val );
                      }
                   }
                }
@@ -1436,6 +1449,8 @@ int ICACHE_FLASH_ATTR user_config_print( void )
                   rc = fail;
                   break;
                }
+
+               system_soft_wdt_feed();
             }
 
             if( rc != working )
@@ -1445,7 +1460,7 @@ int ICACHE_FLASH_ATTR user_config_print( void )
          }
       }
 
-      os_free( user_settings.buf );
+      free( user_settings.buf );
       user_settings.buf = NULL;
    }
 
@@ -1491,7 +1506,7 @@ uint32_t ICACHE_FLASH_ATTR user_config_invalidate( uint32_t addr )
 
 int ICACHE_FLASH_ATTR user_config_scan( int id, int (call_back)(), void *arg )
 {
-   ESP_LOGE( TAG, "user_config_scan" );
+   ESP_LOGD( TAG, "user_config_scan" );
 
    int rc = working;
 
@@ -1555,6 +1570,8 @@ int ICACHE_FLASH_ATTR user_config_scan( int id, int (call_back)(), void *arg )
             {
                ESP_LOGW( TAG, "record is not valid: 0x%04x", rd_addr );
             }
+
+            system_soft_wdt_feed();
          }
 
          if( rc != working )

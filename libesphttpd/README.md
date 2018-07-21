@@ -326,8 +326,8 @@ it to output specific data. For example:
 CgiStatus ICACHE_FLASH_ATTR tplShowName(HttpdConnData *connData, char *token, void **arg) {
 	if (token==NULL) return HTTPD_CGI_DONE;
 
-	if (os_strcmp(token, "username")==0) httpdSend(connData, "John Doe", -1);
-	if (os_strcmp(token, "thing")==0) httpdSend(connData, "ESP8266/ESP32 webserver", -1);
+	if (strcmp(token, "username")==0) httpdSend(connData, "John Doe", -1);
+	if (strcmp(token, "thing")==0) httpdSend(connData, "ESP8266/ESP32 webserver", -1);
 
 	return HTTPD_CGI_DONE;
 }

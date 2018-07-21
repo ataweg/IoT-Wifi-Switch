@@ -34,10 +34,15 @@ static const char *TAG = "wifi_settings";
 //
 // --------------------------------------------------------------------------
 
-#include <osapi.h>
-#include <user_interface.h>
+#ifdef ESP_PLATFORM
+   #include <stdio.h>      // printf()
+   #include <string.h>     // memcpy()
+#else
+   #include <osapi.h>
+   #include <user_interface.h>
+   #include "os_platform.h"         // malloc(), ...
+#endif
 
-#include "user_config.h"
 #include "configs.h"
 #include "wifi_settings.h"
 
@@ -47,10 +52,10 @@ static const char *TAG = "wifi_settings";
 
 // see WifiConfig.tpl.html
 
-#define Default_0x81    "MQTT-Switch"            // Wifi_Name
-#define Default_0x82    "domain"              // Wifi_Server         USER_DOMAIN
-#define Default_0x83    "username"              // Wifi_Username
-#define Default_0x84    "password"              // Wifi_Password
+#define Default_0x81    "Wifi-Switch"           // Wifi_Name
+#define Default_0x82    "Wifi_Server_Url"       // Wifi_Server         USER_DOMAIN
+#define Default_0x83    "Wifi_Username"         // Wifi_Username
+#define Default_0x84    "Wifi_Password"         // Wifi_Password
 #define Default_0x85    "80"                    // Wifi_Port
 
 #define Default_0x91    "esp-wlan"              // Wlan_Ssid_0         USER_WIFI_SSID
@@ -96,7 +101,7 @@ static const char *TAG = "wifi_settings";
 #define Default_0xC3    "192.168.0.10"          // dhcp_address
 #define Default_0xC4    "192.168.0.1"           // dhcp_gateway
 #define Default_0xC5    "255.255.255.0"         // dhcp_netmask
-#define Default_0xC6    "Wifi-Relay-1F035A"     // dhcp_client_name
+#define Default_0xC6    "Wifi-Switch-1F035A"    // dhcp_client_name
 
 #define Default_0xFF    ""                      // end of list
 
@@ -216,7 +221,7 @@ void ICACHE_FLASH_ATTR config_print_wifi_defaults( void )
    {
       ASSERT( "Src %s [0x%x08] isn't 32bit aligned", ( ( uint32_t )( &wifi_settings[ i ].mode ) & 3 ) == 0, "wifi_settings[ i ].mode", ( uint32_t )( &wifi_settings[ i ].mode ) );
       ASSERT( "Dest %s [0x%x08] isn't 32bit aligned", ( ( uint32_t )( &mode ) & 3 ) == 0, "mode", ( uint32_t )( &mode ) );
-      os_memcpy( &mode, &wifi_settings[ i ].id, sizeof( mode ) );
+      memcpy( &mode, &wifi_settings[ i ].id, sizeof( mode ) );
       if( mode.id == 0xff )  // end of list
          break;
 
@@ -232,9 +237,9 @@ void ICACHE_FLASH_ATTR config_print_wifi_defaults( void )
 
       ASSERT( "Src %s [0x%x08] isn't 32bit aligned", ( ( uint32_t )wifi_settings[ i ].text & 3 ) == 0, "wifi_settings[ i ].text", ( uint32_t )wifi_settings[ i ].text );
       ASSERT( "Dest %s [0x%x08] isn't 32bit aligned", ( ( uint32_t )default_str & 3 ) == 0, "default_str", ( uint32_t )default_str );
-      os_memcpy( default_str, wifi_settings[ i ].text, len4 );
+      memcpy( default_str, wifi_settings[ i ].text, len4 );
       default_str[ mode.len ] = 0; // terminate string
-      os_printf( "id 0x%02x: %1d %3d \"%s\" %d\r\n", mode.id, mode.type, mode.len, default_str, len4 );
+      printf( "id 0x%02x: %1d %3d \"%s\" %d\r\n", mode.id, mode.type, mode.len, default_str, len4 );
       i++;
    }
 }

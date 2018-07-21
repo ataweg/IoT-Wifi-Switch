@@ -40,11 +40,14 @@ static const char *TAG = "mqtt_config";
 
 #ifdef ESP_PLATFORM
    #include "tcpip_adapter.h"       // IP2STR, IPSTR
+#else
+   #include <osapi.h>
+   #include "user_interface.h"
 #endif
+
 #include "configs.h"         // enums, config_save_str()
 #include "mqtt_settings.h"
 #include "mqtt_config.h"
-#include "cgiConfig.h"
 
 // --------------------------------------------------------------------------
 //
@@ -53,9 +56,16 @@ static const char *TAG = "mqtt_config";
 typedef struct rst_info *rst_info_t;
 extern rst_info_t sys_rst_info;
 
+MQTT_client_cfg_t MQTT_Client_Cfg;
+MQTT_wifi_cfg_t MQTT_Wifi_Cfg[ num_devices ];
+
+// --------------------------------------------------------------------------
+//
+// --------------------------------------------------------------------------
+
 // from user_mqtt.c
 //
-// char *mqtt_client_name = "/relay/";
+// char *mqtt_client_name = "/switch/";
 // char *mqtt_wifi_names[] =
 // {
 // // same order as enum mqtt_devices
@@ -179,9 +189,9 @@ int ICACHE_FLASH_ATTR mqtt_compare_config( int id, char *str, int value )
       int dev = ( grp >> 4 ) - 1;
       switch( id & 0x0F )
       {
-         case Dev_Name:        return os_strncmp( MQTT_Wifi_Cfg[ dev ].Name,      str, sizeof( MQTT_Wifi_Cfg[ dev ].Name      ) ) == 0 ? 1 : 0;
-         case Topic_Sub:       return os_strncmp( MQTT_Wifi_Cfg[ dev ].Topic_sub, str, sizeof( MQTT_Wifi_Cfg[ dev ].Topic_sub ) ) == 0 ? 1 : 0;
-         case Topic_Pub:       return os_strncmp( MQTT_Wifi_Cfg[ dev ].Topic_pub, str, sizeof( MQTT_Wifi_Cfg[ dev ].Topic_pub ) ) == 0 ? 1 : 0;
+         case Dev_Name:        return strncmp( MQTT_Wifi_Cfg[ dev ].Name,      str, sizeof( MQTT_Wifi_Cfg[ dev ].Name      ) ) == 0 ? 1 : 0;
+         case Topic_Sub:       return strncmp( MQTT_Wifi_Cfg[ dev ].Topic_sub, str, sizeof( MQTT_Wifi_Cfg[ dev ].Topic_sub ) ) == 0 ? 1 : 0;
+         case Topic_Pub:       return strncmp( MQTT_Wifi_Cfg[ dev ].Topic_pub, str, sizeof( MQTT_Wifi_Cfg[ dev ].Topic_pub ) ) == 0 ? 1 : 0;
          case Enable_Publish:  return MQTT_Wifi_Cfg[ dev ].Enable_publish == value ? 1 : 0;
          case Retained:        return MQTT_Wifi_Cfg[ dev ].Retained       == value ? 1 : 0;
          case QoS:             return MQTT_Wifi_Cfg[ dev ].QoS            == value ? 1 : 0;
@@ -192,11 +202,11 @@ int ICACHE_FLASH_ATTR mqtt_compare_config( int id, char *str, int value )
       switch( id )
       {
          // these values are also stored in the flash
-         case Mqtt_Name:        return os_strncmp( MQTT_Client_Cfg.Name,      str, sizeof( MQTT_Client_Cfg.Name      ) ) == 0 ? 1 : 0;
-         case Mqtt_Server:      return os_strncmp( MQTT_Client_Cfg.Server,    str, sizeof( MQTT_Client_Cfg.Server    ) ) == 0 ? 1 : 0;
-         case Mqtt_Username:    return os_strncmp( MQTT_Client_Cfg.Username,  str, sizeof( MQTT_Client_Cfg.Username  ) ) == 0 ? 1 : 0;
-         case Mqtt_Password:    return os_strncmp( MQTT_Client_Cfg.Password,  str, sizeof( MQTT_Client_Cfg.Password  ) ) == 0 ? 1 : 0;
-         case Mqtt_Client_Id:   return os_strncmp( MQTT_Client_Cfg.Client_ID, str, sizeof( MQTT_Client_Cfg.Client_ID ) ) == 0 ? 1 : 0;
+         case Mqtt_Name:        return strncmp( MQTT_Client_Cfg.Name,      str, sizeof( MQTT_Client_Cfg.Name      ) ) == 0 ? 1 : 0;
+         case Mqtt_Server:      return strncmp( MQTT_Client_Cfg.Server,    str, sizeof( MQTT_Client_Cfg.Server    ) ) == 0 ? 1 : 0;
+         case Mqtt_Username:    return strncmp( MQTT_Client_Cfg.Username,  str, sizeof( MQTT_Client_Cfg.Username  ) ) == 0 ? 1 : 0;
+         case Mqtt_Password:    return strncmp( MQTT_Client_Cfg.Password,  str, sizeof( MQTT_Client_Cfg.Password  ) ) == 0 ? 1 : 0;
+         case Mqtt_Client_Id:   return strncmp( MQTT_Client_Cfg.Client_ID, str, sizeof( MQTT_Client_Cfg.Client_ID ) ) == 0 ? 1 : 0;
          case Mqtt_Port:        return MQTT_Client_Cfg.Port        == value ? 1 : 0;
          case Mqtt_Enable_SSL:  return MQTT_Client_Cfg.Enable_SSL  == value ? 1 : 0;
          case Mqtt_Self_Signed: return MQTT_Client_Cfg.Self_Signed == value ? 1 : 0;
@@ -223,9 +233,9 @@ int ICACHE_FLASH_ATTR mqtt_update_config( int id, char *str, int value )
       int dev = ( grp >> 4 ) - 1;
       switch( id & 0x0F )
       {
-         case Dev_Name:        os_strncpy( MQTT_Wifi_Cfg[ dev ].Name,      str, sizeof( MQTT_Wifi_Cfg[ dev ].Name      ) ); break;
-         case Topic_Sub:       os_strncpy( MQTT_Wifi_Cfg[ dev ].Topic_sub, str, sizeof( MQTT_Wifi_Cfg[ dev ].Topic_sub ) ); break;
-         case Topic_Pub:       os_strncpy( MQTT_Wifi_Cfg[ dev ].Topic_pub, str, sizeof( MQTT_Wifi_Cfg[ dev ].Topic_pub ) ); break;
+         case Dev_Name:        strncpy( MQTT_Wifi_Cfg[ dev ].Name,      str, sizeof( MQTT_Wifi_Cfg[ dev ].Name      ) ); break;
+         case Topic_Sub:       strncpy( MQTT_Wifi_Cfg[ dev ].Topic_sub, str, sizeof( MQTT_Wifi_Cfg[ dev ].Topic_sub ) ); break;
+         case Topic_Pub:       strncpy( MQTT_Wifi_Cfg[ dev ].Topic_pub, str, sizeof( MQTT_Wifi_Cfg[ dev ].Topic_pub ) ); break;
          case Enable_Publish:  MQTT_Wifi_Cfg[ dev ].Enable_publish = value; break;
          case Retained:        MQTT_Wifi_Cfg[ dev ].Retained       = value; break;
          case QoS:             MQTT_Wifi_Cfg[ dev ].QoS            = value; break;
@@ -242,11 +252,11 @@ int ICACHE_FLASH_ATTR mqtt_update_config( int id, char *str, int value )
          // or at least of the  mqtt service,. This means we have to
          // save the new values in the flash before do a restart.
          // Storing them in the memory makes no sense.
-         case Mqtt_Name:        os_strncpy( MQTT_Client_Cfg.Name,      str, sizeof( MQTT_Client_Cfg.Name      ) ); break;
-         case Mqtt_Server:      os_strncpy( MQTT_Client_Cfg.Server,    str, sizeof( MQTT_Client_Cfg.Server    ) ); break;
-         case Mqtt_Username:    os_strncpy( MQTT_Client_Cfg.Username,  str, sizeof( MQTT_Client_Cfg.Username  ) ); break;
-         case Mqtt_Password:    os_strncpy( MQTT_Client_Cfg.Password,  str, sizeof( MQTT_Client_Cfg.Password  ) ); break;
-         case Mqtt_Client_Id:   os_strncpy( MQTT_Client_Cfg.Client_ID, str, sizeof( MQTT_Client_Cfg.Client_ID ) ); break;
+         case Mqtt_Name:        strncpy( MQTT_Client_Cfg.Name,      str, sizeof( MQTT_Client_Cfg.Name      ) ); break;
+         case Mqtt_Server:      strncpy( MQTT_Client_Cfg.Server,    str, sizeof( MQTT_Client_Cfg.Server    ) ); break;
+         case Mqtt_Username:    strncpy( MQTT_Client_Cfg.Username,  str, sizeof( MQTT_Client_Cfg.Username  ) ); break;
+         case Mqtt_Password:    strncpy( MQTT_Client_Cfg.Password,  str, sizeof( MQTT_Client_Cfg.Password  ) ); break;
+         case Mqtt_Client_Id:   strncpy( MQTT_Client_Cfg.Client_ID, str, sizeof( MQTT_Client_Cfg.Client_ID ) ); break;
          case Mqtt_Port:        MQTT_Client_Cfg.Port        = value; break;
          case Mqtt_Enable_SSL:  MQTT_Client_Cfg.Enable_SSL  = value; break;
          case Mqtt_Self_Signed: MQTT_Client_Cfg.Self_Signed = value; break;
@@ -326,7 +336,7 @@ void ICACHE_FLASH_ATTR getMqttClientConfig( void )
 
 static Configuration_Item_t cfgItem;
 
-Configuration_Item_t *init_mqtt_config( void )
+Configuration_Item_t* ICACHE_FLASH_ATTR init_mqtt_config( void )
 {
    cfgItem.config_keywords = MqttConfig_Keywords;
    cfgItem.num_keywords    = sizeof( MqttConfig_Keywords ) / sizeof( Config_Keyword_t );

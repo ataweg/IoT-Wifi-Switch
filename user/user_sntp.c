@@ -35,14 +35,23 @@ static const char *TAG = "user/user_sntp.c";
 //
 // --------------------------------------------------------------------------
 
-#include <osapi.h>
+#ifdef ESP_PLATFORM
+   #include <stdio.h>
+   #include "esp_types.h"
+
+   #define ICACHE_FLASH_ATTR
+#else
+   #include <osapi.h>
+#endif
+
 #include <user_interface.h>
 #include <sntp.h>                // sntp_get_real_time()
 
-#include "sntp_client.h"
 #include "user_sntp.h"
+#include "user_mqtt.h"        // mqttPublish()
+
+#include "sntp_client.h"
 #include "rtc.h"
-#include "user_mqtt.h"
 
 // --------------------------------------------------------------------------
 //
@@ -82,10 +91,10 @@ static void ICACHE_FLASH_ATTR sntpTimerTask( void )
    time_t timestamp = sntp_gettime();
    dt = gmtime( &timestamp );
 
-   os_sprintf( msg, "%d:%02d:%02d", dt->tm_hour, dt->tm_min, dt->tm_sec );
+   sprintf( msg, "%d:%02d:%02d", dt->tm_hour, dt->tm_min, dt->tm_sec );
    mqttPublish( &mqttClient, dev_Time, msg );
 
-   os_sprintf( msg, "%d", system_adc_read() );
+   sprintf( msg, "%d", system_adc_read() );
    mqttPublish( &mqttClient, dev_Adc, msg );
 }
 
@@ -142,7 +151,7 @@ static void ICACHE_FLASH_ATTR sntpFirstSyncTask( void )
 static time_t new_timestamp;
 static uint64_t last_clock;
 
-void cb_timeSyncd( uint32_t event, void *arg, void *arg2 )
+void ICACHE_FLASH_ATTR cb_timeSyncd( uint32_t event, void *arg, void *arg2 )
 {
    ESP_LOGD( TAG, "cb_timeSyncd" );
    // Time successfully got from NTP server
@@ -153,7 +162,7 @@ void cb_timeSyncd( uint32_t event, void *arg, void *arg2 )
    ESP_LOGD( TAG, "timeSyncd %u %u %u %lld %lld", system_get_time(), new_timestamp, timestamp, last_clock/1000, rtc_time.clock/1000 );
 }
 
-void cb_timeUpdated( uint32_t event, void *arg, void *arg2 )
+void ICACHE_FLASH_ATTR cb_timeUpdated( uint32_t event, void *arg, void *arg2 )
 {
    ESP_LOGD( TAG, "cb_timeUpdated" );
    // local rtc successfully updated
@@ -161,7 +170,7 @@ void cb_timeUpdated( uint32_t event, void *arg, void *arg2 )
    ESP_LOGD( TAG, "timeUpdated %u %u %u %lld %lld", system_get_time(), new_timestamp, timestamp, last_clock/1000, rtc_time.clock/1000 );
 }
 
-void cb_noResponse( uint32_t event, void *arg, void *arg2 )
+void ICACHE_FLASH_ATTR cb_noResponse( uint32_t event, void *arg, void *arg2 )
 {
    ESP_LOGD( TAG, "cb_noResponse" );
    // No response from server
@@ -169,7 +178,7 @@ void cb_noResponse( uint32_t event, void *arg, void *arg2 )
    ESP_LOGD( TAG, "noResponse %u %u %u %lld %lld", system_get_time(), new_timestamp, timestamp, last_clock/1000, rtc_time.clock/1000 );
 }
 
-void cb_notConnected( uint32_t event, void *arg, void *arg2 )
+void ICACHE_FLASH_ATTR cb_notConnected( uint32_t event, void *arg, void *arg2 )
 {
    ESP_LOGD( TAG, "notConnected" );
    time_t timestamp = ( time_t )arg;

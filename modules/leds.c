@@ -27,8 +27,8 @@
    #define HEAP_INFO( x )
 #endif
 
-#define LOG_LOCAL_LEVEL    ESP_LOG_INFO
-static const char* TAG = "leds";
+#define LOG_LOCAL_LEVEL    ESP_LOG_WARN
+static const char* TAG = "leds.c";
 #include "esp_log.h"
 #define S( str ) ( str == NULL ? "<null>": str )
 
@@ -36,11 +36,20 @@ static const char* TAG = "leds";
 //
 // --------------------------------------------------------------------------
 
-#include <osapi.h>
-#include <user_interface.h>
+#ifdef ESP_PLATFORM
+  #include <string.h>        // memset()
+  #include "driver/gpio.h"
 
-#include "user_config.h"
-#include "io.h"
+   #define ICACHE_FLASH_ATTR
+   #define ICACHE_RODATA_ATTR
+#else
+   #include <osapi.h>
+   #include <user_interface.h>
+
+   #include "user_config.h"
+   #include "io.h"
+#endif
+
 #include "leds.h"
 
 // --------------------------------------------------------------------------
@@ -48,7 +57,7 @@ static const char* TAG = "leds";
 // --------------------------------------------------------------------------
 
 led_config_t  led_config[NUM_LEDS];
-led_state_t  led_state[NUM_LEDS];
+led_state_t   led_state[NUM_LEDS];
 
 // --------------------------------------------------------------------------
 //
@@ -108,7 +117,7 @@ bool ICACHE_FLASH_ATTR led_busy( uint8_t id )
 }
 
 // --------------------------------------------------------------------------
-//
+// update leds
 // --------------------------------------------------------------------------
 
 // update leds every 100ms in systemTimer100msTask (user_main.c)
@@ -124,7 +133,7 @@ void ICACHE_FLASH_ATTR leds_update( void )
       {
          // ESP_LOGD( TAG, "led %d setup mode 0x%02x", id, led_config[ id ].mode );
 
-         os_memcpy( &led_state[ id ], &led_config[id ], sizeof( led_config_t ) );
+         memcpy( &led_state[ id ], &led_config[id ], sizeof( led_config_t ) );
          led_config[ id ].mode = LED_NONE;      //  we have take over the configuration
 
          if( led_state[ id ].mode == LED_ON || led_state[ id ].mode == LED_OFF )

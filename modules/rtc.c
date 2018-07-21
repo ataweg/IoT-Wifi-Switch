@@ -55,9 +55,7 @@ static const char* TAG = "rtc";
 //
 // --------------------------------------------------------------------------
 
-#include <osapi.h>
-#include <user_interface.h>
-#include <espconn.h>
+#include <user_interface.h>      // system_rtc_mem_read
 #include <mem.h>
 
 #include "rtc.h"
@@ -231,8 +229,8 @@ time_t ICACHE_FLASH_ATTR rtc_test( void )
 {
    static uint8_t cnt = 0;
 
-   os_printf( "RTC TIMER: %d \r\n", system_get_rtc_time() );
-   os_printf( "SYS TIMER: %d \r\n", system_get_time() );
+   printf( "RTC TIMER: %d \r\n", system_get_rtc_time() );
+   printf( "SYS TIMER: %d \r\n", system_get_time() );
 
    if( rtc_need_restart != 0 )
    {
@@ -243,39 +241,39 @@ time_t ICACHE_FLASH_ATTR rtc_test( void )
       {
          // rtc_mem is invalid
 
-         os_printf( "clock    : %d \r\n", rtc_time.clock );
-         os_printf( "last rtc : %d \r\n", rtc_time.last_rtc );
-         os_printf( "magic    : 0x%08x\r\n", rtc_time.magic );
-         os_printf( "rtc time init...\r\n" );
+         printf( "clock    : %d \r\n", rtc_time.clock );
+         printf( "last rtc : %d \r\n", rtc_time.last_rtc );
+         printf( "magic    : 0x%08x\r\n", rtc_time.magic );
+         printf( "rtc time init...\r\n" );
 
          rtc_time.magic = RTC_MAGIC;
          rtc_time.clock = 0;
          rtc_time.start_time = 0;
          rtc_time.last_rtc = system_get_rtc_time();
 
-         os_printf( "last rtc : %d \r\n", rtc_time.last_rtc );
+         printf( "last rtc : %d \r\n", rtc_time.last_rtc );
       }
       else
       {
          // rtc_mem is still valid
 
-         os_printf( "magic correct\r\n" );
-         os_printf( "clock    : %lld \r\n", rtc_time.clock );
-         os_printf( "last rtc : %ld \r\n", rtc_time.last_rtc );
-         os_printf( "magic    : 0x%08x\r\n", rtc_time.magic );
+         printf( "magic correct\r\n" );
+         printf( "clock    : %lld \r\n", rtc_time.clock );
+         printf( "last rtc : %ld \r\n", rtc_time.last_rtc );
+         printf( "magic    : 0x%08x\r\n", rtc_time.magic );
       }
       rtc_need_restart = 0;
    }
    else
    {
-      os_printf( "magic still valid\r\n" );
-      os_printf( "clock    : %lld \r\n", rtc_time.clock );
-      os_printf( "last rtc : %ld \r\n", rtc_time.last_rtc );
-      os_printf( "magic    : 0x%08x\r\n", rtc_time.magic );
+      printf( "magic still valid\r\n" );
+      printf( "clock    : %lld \r\n", rtc_time.clock );
+      printf( "last rtc : %ld \r\n", rtc_time.last_rtc );
+      printf( "magic    : 0x%08x\r\n", rtc_time.magic );
    }
 
-   os_printf( "==================\r\n" );
-   os_printf( "RTC time test : \r\n" );
+   printf( "==================\r\n" );
+   printf( "RTC time test : \r\n" );
 
    uint32_t rtc_t1, rtc_t2;
    uint32_t st_t1, st_t2;
@@ -291,13 +289,13 @@ time_t ICACHE_FLASH_ATTR rtc_test( void )
    rtc_t2 = system_get_rtc_time();
    cal_t2 = system_rtc_clock_cali_proc();
 
-   os_printf( " rtc_t1 : %d \r\n", rtc_t1 );
-   os_printf( " rtc_t2 : %d \r\n", rtc_t2 );
-   os_printf( " rtc_t2-t1 : %d \r\n", rtc_t2 - rtc_t1 );
-   os_printf( " st_t2-t2 :  %d  \r\n", st_t2 - st_t1 );
-   os_printf( " cal 1  : %d.%03d  0x%08x\r\n", ( ( cal_t1 * 1000 ) >> 12 ) / 1000, ( ( cal_t1 * 1000 ) >> 12 ) % 1000, cal_t1 );
-   os_printf( " cal 2  : %d.%03d  0x%08x\r\n", ( ( cal_t2 * 1000 ) >> 12 ) / 1000, ( ( cal_t2 * 1000 ) >> 12 ) % 1000, cal_t2 );
-   os_printf( "==================\r\n\r\n" );
+   printf( " rtc_t1 : %d \r\n", rtc_t1 );
+   printf( " rtc_t2 : %d \r\n", rtc_t2 );
+   printf( " rtc_t2-t1 : %d \r\n", rtc_t2 - rtc_t1 );
+   printf( " st_t2-t2 :  %d  \r\n", st_t2 - st_t1 );
+   printf( " cal 1  : %d.%03d  0x%08x\r\n", ( ( cal_t1 * 1000 ) >> 12 ) / 1000, ( ( cal_t1 * 1000 ) >> 12 ) % 1000, cal_t1 );
+   printf( " cal 2  : %d.%03d  0x%08x\r\n", ( ( cal_t2 * 1000 ) >> 12 ) / 1000, ( ( cal_t2 * 1000 ) >> 12 ) % 1000, cal_t2 );
+   printf( "==================\r\n\r\n" );
 
    uint32_t curr_rtc = system_get_rtc_time();
    uint32_t curr_cal = system_rtc_clock_cali_proc();
@@ -305,29 +303,29 @@ time_t ICACHE_FLASH_ATTR rtc_test( void )
    rtc_time.clock += ( ( ( uint64_t )( curr_rtc - rtc_time.last_rtc ) ) * ( ( uint64_t )( ( curr_cal * 1000 ) >> 12 ) ) );
    rtc_time.last_rtc = curr_rtc;
 
-   os_printf( " rtc clock     : %lld \r\n", rtc_time.clock );
-   os_printf( " power on time : %lldus\r\n", rtc_time.clock / 1000 );
-   os_printf( " power on time : %lld.%02llds\r\n", ( rtc_time.clock / 10000000 ) / 100, ( rtc_time.clock / 10000000 ) % 100 );
+   printf( " rtc clock     : %lld \r\n", rtc_time.clock );
+   printf( " power on time : %lldus\r\n", rtc_time.clock / 1000 );
+   printf( " power on time : %lld.%02llds\r\n", ( rtc_time.clock / 10000000 ) / 100, ( rtc_time.clock / 10000000 ) % 100 );
 
    rtc_time.last_rtc = rtc_t2;
    system_rtc_mem_write( 64, &rtc_time, sizeof( rtc_time ) );
-   os_printf( "------------------------\r\n" );
+   printf( "------------------------\r\n" );
 
 #if 1
    if( 20 == ( cnt++ ) )
    {
-      os_printf( " system restart\r\n" );
+      printf( " system restart\r\n" );
       system_restart();
    }
    else
    {
-      os_printf( " continue ...\r\n" );
+      printf( " continue ...\r\n" );
    }
 #else
    cnt++;
 #endif
-   os_printf( " count:  %d\r\n", cnt );
-   os_printf( " uptime: %lds\r\n", rtc_getUptime() );
+   printf( " count:  %d\r\n", cnt );
+   printf( " uptime: %lds\r\n", rtc_getUptime() );
 
    return ( time_t )( ( uint64_t )rtc_time.clock / 1000 / 1000 / 1000 ); // return seconds
 }

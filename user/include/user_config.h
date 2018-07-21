@@ -88,7 +88,7 @@
    #define TARGET_DEVICE         "NodeMCU-Modul"
 
    // for NodeMCU module without external components, use the on board led as relay on/off indicator
-   // here use the on board led as InfoLEd for relay on/off indicator
+   // here use the on board led as InfoLed for relay on/off indicator
 
    #define pin_Button             0       // in   FUNC_GPIO0  - PERIPHS_IO_MUX_GPIO0_U
    #define pin_InfoLed            2       // out  FUNC_GPIO2  - PERIPHS_IO_MUX_GPIO2_U

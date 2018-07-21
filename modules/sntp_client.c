@@ -30,9 +30,8 @@ static const char *TAG = "sntp_client";
 //
 // --------------------------------------------------------------------------
 
-#include <osapi.h>
-#include <user_interface.h>
-#include <espconn.h>
+#include <osapi.h>                // strlen()
+#include <user_interface.h>       // system_get_time()
 #include <mem.h>
 #include <sntp.h>
 
@@ -135,7 +134,7 @@ bool ICACHE_FLASH_ATTR sntp_client_init( char *time_servers[], int timezone, boo
    ESP_LOGD( TAG, "sntp_client_init ..." );
    sntp_stop();
 
-   // os_memset( ( void * )&sntp_client, 0, sizeof( sntp_client ) );
+   // memset( ( void * )&sntp_client, 0, sizeof( sntp_client ) );
    // setup the time when the rtc needs an sync update
    sntp_client.daylight = daylight;
    sntp_client.isSummer = 0;
@@ -254,7 +253,7 @@ time_t ICACHE_FLASH_ATTR sntp_gettime( void )
             {
                char time_str_buf[32];
                char *time_str = _sntp_get_real_time( rtc_time );  // result includes line ending character
-               os_strcpy( time_str_buf, time_str );
+               strcpy( time_str_buf, time_str );
                ESP_LOGI( TAG, "Resync clock: correct time from %s to %s", time_str_buf, _sntp_get_real_time( new_time ) );
             }
 #endif
@@ -516,7 +515,7 @@ void ICACHE_FLASH_ATTR sntp_test( void )
 {
    // Step 1. Enable SNTP.
    sntp_stop();
-   ip_addr_t *addr = ( ip_addr_t * )os_zalloc( sizeof( ip_addr_t ) );
+   ip_addr_t *addr = ( ip_addr_t * )zalloc( sizeof( ip_addr_t ) );
    sntp_setservername( 0, "us.pool.ntp.org" ); // set server 0 by domain name
    sntp_setservername( 1, "ntp.sjtu.edu.cn" ); // set server 1 by domain name
    ipaddr_aton( "210.72.145.44", addr );
@@ -525,7 +524,7 @@ void ICACHE_FLASH_ATTR sntp_test( void )
 
    sntp_init();      // start sntp client
 
-   os_free( addr );
+   free( addr );
 
    // Step 2. Set a timer to check SNTP timestamp.
    os_timer_disarm( &sntp_timer );
@@ -538,7 +537,7 @@ void ICACHE_FLASH_ATTR sntp_check_stamp( void *arg )
    // Step 3. Timer Callback
 
    uint32_t sys_time = system_get_time();
-   os_printf( "Timer Function 0 ( Time: %d us )\n", sys_time );
+   printf( "Timer Function 0 ( Time: %d us )\n", sys_time );
 
    if( wifi_station_get_connect_status() == STATION_GOT_IP )
    {
@@ -547,12 +546,12 @@ void ICACHE_FLASH_ATTR sntp_check_stamp( void *arg )
       if( current_stamp != 0 )
       {
          os_timer_disarm( &sntp_timer );
-         os_printf( "sntp: %d, %s", current_stamp, sntp_get_real_time( current_stamp ) );
+         printf( "sntp: %d, %s", current_stamp, sntp_get_real_time( current_stamp ) );
 
-         os_printf( "sntp server name: %s\r\n", sntp_getservername( 0 ) );
-         os_printf( "sntp server name: %s\r\n", sntp_getservername( 1 ) );
-         os_printf( "sntp ip address : %d\r\n", sntp_getserver( 2 ) );
-         os_printf( "snpt timezone   : %d\r\n", sntp_get_timezone() );
+         printf( "sntp server name: %s\r\n", sntp_getservername( 0 ) );
+         printf( "sntp server name: %s\r\n", sntp_getservername( 1 ) );
+         printf( "sntp ip address : %d\r\n", sntp_getserver( 2 ) );
+         printf( "snpt timezone   : %d\r\n", sntp_get_timezone() );
 
          os_timer_arm( &sntp_timer, 10000, 0 );
          return;
@@ -560,7 +559,7 @@ void ICACHE_FLASH_ATTR sntp_check_stamp( void *arg )
    }
 
    os_timer_arm( &sntp_timer, 2000, 0 );
-   os_printf( "wait for snpt time\r\n" );
+   printf( "wait for snpt time\r\n" );
 }
 #endif
 

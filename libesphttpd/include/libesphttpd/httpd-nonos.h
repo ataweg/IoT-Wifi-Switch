@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------
 //
-// Project       IoT - Internet of Things - WebServer
+// Project       IoT - Internet of Things
 //
 // File          httpd-nonos.h
 //

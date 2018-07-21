@@ -1,4 +1,6 @@
 // Combined include file for esp8266 and esp32
+#ifndef ESP_H
+#define ESP_H
 
 #ifdef ESP_PLATFORM // only set in esp-idf
    #define FREERTOS 1
@@ -22,8 +24,6 @@
 
 
 #include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #ifndef linux
@@ -51,6 +51,4 @@
 
 #include "platform.h"
 
-#ifndef linux
-   int  os_snprintf( char *str, size_t size, const char *format, ... ) __attribute__( ( format( printf, 3, 4 ) ) );
-#endif
+#endif // ESP_H

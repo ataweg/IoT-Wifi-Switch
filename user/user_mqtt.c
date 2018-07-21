@@ -73,12 +73,13 @@ static const char* TAG = "user/user_mqtt.c";
 
 #include <osapi.h>
 #include <user_interface.h>
-#include <mem.h>
 
-#include "device.h"     // devGet(), devSet();
-#include "configs.h"
-#include "mqtt_config.h"
+#include "user_config.h"
 #include "user_mqtt.h"
+
+#include "mqtt_config.h"         // malloc(), ...
+#include "configs.h"
+#include "device.h"              // devGet(), devSet();
 
 // --------------------------------------------------------------------------
 //
@@ -202,7 +203,7 @@ static void ICACHE_FLASH_ATTR mqtt_ReconnectTimeoutCb( void *args )
       MQTT_Connect( client );
 }
 
-static void mqttTimeoutCb( uint32_t *args )
+static void ICACHE_FLASH_ATTR mqttTimeoutCb( uint32_t *args )
 {
    ESP_LOGD( TAG, "MQTT: Connect timeout ..." );
 
@@ -285,15 +286,15 @@ static void ICACHE_FLASH_ATTR mqttPublishedCb( uint32_t *args )
 
 static void ICACHE_FLASH_ATTR mqttDataCb( uint32_t *args, const char* topic, uint32_t topic_len, const char *data, uint32_t data_len )
 {
-   char *topicBuf = ( char* )os_zalloc( topic_len + 1 ); // we need this for build zero terminated strings
-   char *dataBuf  = ( char* )os_zalloc( data_len + 1 );
+   char *topicBuf = ( char* )zalloc( topic_len + 1 ); // we need this for build zero terminated strings
+   char *dataBuf  = ( char* )zalloc( data_len + 1 );
 
 //   MQTT_Client* client = ( MQTT_Client* )args;  // unused
 
-   os_memcpy( topicBuf, topic, topic_len );
+   memcpy( topicBuf, topic, topic_len );
    topicBuf[topic_len] = 0;
 
-   os_memcpy( dataBuf, data, data_len );
+   memcpy( dataBuf, data, data_len );
    dataBuf[data_len] = 0;
 
    ESP_LOGD( TAG, "Receive topic: %s, data: %s", topicBuf, dataBuf );
@@ -331,8 +332,8 @@ static void ICACHE_FLASH_ATTR mqttDataCb( uint32_t *args, const char* topic, uin
       }
    }
 
-   os_free( topicBuf );
-   os_free( dataBuf );
+   free( topicBuf );
+   free( dataBuf );
 }
 
 // --------------------------------------------------------------------------

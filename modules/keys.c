@@ -57,12 +57,11 @@ static const char* TAG = "keys";
 //
 // --------------------------------------------------------------------------
 
-#include "ets_sys.h"
-#include "os_type.h"
-#include "osapi.h"
-#include "mem.h"
-#include "gpio.h"                // GPIO_PIN_INTR_ANYEDGE
-#include "user_interface.h"
+#include "osapi.h"               // os_timer(), ...
+#include "user_interface.h"      // system_get_time()
+
+#include "mem.h"                 // os_malloc(), ...
+#include "os_platform.h"         // malloc(), ...
 #include "esp_missing.h"         // ets_isr_mask()
 
 #include "keys.h"
@@ -82,15 +81,17 @@ static void key_intr_handler( void *arg );
  *                uint32_t gpio_func - gpio function
  *                key_function long_press - long press function, needed to install
  *                key_function short_press - short press function, needed to install
- * Returns      : single_key_param - single key parameter, needed by key init
+ * Returns      : single_key_param_t - single key parameter, needed by key init
  *******************************************************************************/
 
-single_key_param* ICACHE_FLASH_ATTR single_key_init( uint8_t gpio_id, uint32_t gpio_name, uint8_t gpio_func,
+single_key_param_t* ICACHE_FLASH_ATTR single_key_init( uint8_t gpio_id, uint32_t gpio_name, uint8_t gpio_func,
                                           key_function very_long_press, uint32_t press_very_long_time,
                                           key_function long_press, uint32_t press_long_time,
                                           key_function short_press )
 {
-   single_key_param* single_key = ( single_key_param* )os_malloc( sizeof( single_key_param ) );
+   ESP_LOGD( TAG, "single_key_init ..." );
+
+   single_key_param_t* single_key = ( single_key_param_t* )zalloc( sizeof( single_key_param_t ) );
 
    single_key->key_state   = KEY_IDLE;
    single_key->dmy         = 0;
@@ -105,6 +106,8 @@ single_key_param* ICACHE_FLASH_ATTR single_key_init( uint8_t gpio_id, uint32_t g
    single_key->very_long_press_cb   = very_long_press;
    single_key->press_very_long_time = press_very_long_time;
 
+   ESP_LOGD( TAG, "single_key_init (0x%08x) %d", single_key, single_key->key_counter );
+
    return single_key;
 }
 
@@ -115,9 +118,11 @@ single_key_param* ICACHE_FLASH_ATTR single_key_init( uint8_t gpio_id, uint32_t g
  * Returns      : none
  *******************************************************************************/
 
-void ICACHE_FLASH_ATTR keys_init( keys_param *keys, int key_num, single_key_param* *single_key_list )
+void ICACHE_FLASH_ATTR keys_init( keys_param_t *keys, int key_num, single_key_param_t* *single_key_list )
 {
    uint8_t i;
+
+   ESP_LOGD( TAG, "keys_init (0x%08x) (0x%08x)", keys, single_key_list[0] );
 
    keys->key_num = key_num;
    keys->single_key_list = single_key_list;
@@ -127,7 +132,7 @@ void ICACHE_FLASH_ATTR keys_init( keys_param *keys, int key_num, single_key_para
 
    for( i = 0; i < keys->key_num; i++ )
    {
-      single_key_param* single_key = keys->single_key_list[i];
+      single_key_param_t* single_key = keys->single_key_list[i];
 
       single_key->key_state = KEY_IDLE;
       single_key->key_counter = 0;
@@ -153,11 +158,11 @@ void ICACHE_FLASH_ATTR keys_init( keys_param *keys, int key_num, single_key_para
 /******************************************************************************
  * FunctionName : key_50ms_cb
  * Description  : 50ms timer callback to check it's a real key push
- * Parameters   : single_key_param *single_key - single key parameter
+ * Parameters   : single_key_param_t *single_key - single key parameter
  * Returns      : none
  *******************************************************************************/
 
-static void ICACHE_FLASH_ATTR key_50ms_cb( single_key_param *single_key )
+static void ICACHE_FLASH_ATTR key_50ms_cb( single_key_param_t *single_key )
 {
    os_timer_disarm( &single_key->key_50ms );
 
@@ -218,11 +223,11 @@ static void key_intr_handler( void *arg )
 {
    uint8_t i;
    uint32_t gpio_status = GPIO_REG_READ( GPIO_STATUS_ADDRESS );  // read Interrupt status register
-   keys_param *keys = ( keys_param * )arg;
+   keys_param_t *keys = ( keys_param_t * )arg;
 
    for( i = 0; i < keys->key_num; i++ )
    {
-      single_key_param* single_key = keys->single_key_list[i];
+      single_key_param_t* single_key = keys->single_key_list[i];
 
       if( gpio_status & BIT( single_key->gpio_id ) )
       {

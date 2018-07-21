@@ -2,7 +2,7 @@
 //
 // Project       IoT - Internet of Things
 //
-// File          cgiRelayStatus.c
+// File          cgiSwitchStatus.c
 //
 // Author        Axel Werner
 //
@@ -17,7 +17,7 @@
 #ifndef __CGISTATUS_H__
 #define __CGISTATUS_H__
 
-CgiStatus ICACHE_FLASH_ATTR tplRelayStatus( HttpdConnData *connData, char *token, void **arg );
+CgiStatus ICACHE_FLASH_ATTR tplSwitchStatus( HttpdConnData *connData, char *token, void **arg );
 
 
 #endif // __CGISTATUS_H__

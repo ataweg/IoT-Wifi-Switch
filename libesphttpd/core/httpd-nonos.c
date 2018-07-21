@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------
 //
-// Project       IoT - Internet of Things - WebServer
+// Project       IoT - Internet of Things
 //
 // File          httpd-nonos.c
 //
@@ -371,7 +371,7 @@ int ICACHE_FLASH_ATTR httpdPlatSendData( HttpdInstance *pInstance, HttpdConnData
    ConnTypePtr pConn = frconn_of_conn( connData );
 
    r = espconn_send( pConn->conn, ( uint8_t* )buf, len );
-   return ( r >= 0 ? len : 0  );
+   return ( r == ESPCONN_OK ? len : 0  );
 }
 
 void ICACHE_FLASH_ATTR httpdPlatDisconnect( HttpdConnData *connData )

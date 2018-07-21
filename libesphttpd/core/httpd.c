@@ -83,21 +83,18 @@ static const char *TAG = "httpd";
 //
 // --------------------------------------------------------------------------
 
+#include <strings.h>
+#include <stdlib.h>  // atoi()
+
 #ifdef linux
    #include <libesphttpd/linux.h>
 #else
    #include <libesphttpd/esp.h>
 #endif
 
-#include <strings.h>
-
 #include "libesphttpd/httpd.h"
 #include "libesphttpd/httpdespfs.h"   // serveStaticFile()
 #include "httpd-platform.h"
-
-#ifdef ESP_PLATFORM
-   #define os_snprintf    snprintf
-#endif
 
 // --------------------------------------------------------------------------
 //
@@ -417,7 +414,7 @@ void ICACHE_FLASH_ATTR httpdStartResponse( HttpdConnData *connData, int code )
 
    if( connData->priv->flags & HFL_CHUNKED ) connStr = "Transfer-Encoding: chunked\r\n";
    if( connData->priv->flags & HFL_NOCONNECTIONSTR ) connStr = "";
-   l = os_snprintf( buf, sizeof( buf ), "HTTP/1.%d %d %s\r\nServer: %s\r\n%s",
+   l = snprintf( buf, sizeof( buf ), "HTTP/1.%d %d %s\r\nServer: %s\r\n%s",
                  ( connData->priv->flags & HFL_HTTP11 ) ? 1 : 0,
                  code,
                  code2str( code ),

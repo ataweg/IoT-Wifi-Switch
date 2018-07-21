@@ -36,6 +36,9 @@ static const char *TAG = "wifi_config";
 
 #ifdef ESP_PLATFORM
    #include "tcpip_adapter.h"       // IP2STR, IPSTR
+#else
+   #include <osapi.h>
+   #include "user_interface.h"
 #endif
 
 #include "configs.h"         // enums, config_save_str()
@@ -473,7 +476,7 @@ void ICACHE_FLASH_ATTR getDhcpConfig( void )
 
 static Configuration_Item_t cfgItem;
 
-Configuration_Item_t *init_wifi_config( void )
+Configuration_Item_t* ICACHE_FLASH_ATTR init_wifi_config( void )
 {
    cfgItem.config_keywords = WifiConfig_Keywords;
    cfgItem.num_keywords    = sizeof( WifiConfig_Keywords ) / sizeof( Config_Keyword_t );

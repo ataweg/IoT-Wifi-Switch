@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------
 //
-// Project       IoT - Internet of Things - Wifi Switch
+// Project       IoT - Internet of Things - IoT-Wifi-Switch
 //
 // File          user_wifi.c
 //
@@ -40,20 +40,23 @@ static const char* TAG = "user/user_wifi.c";
 
 #include <osapi.h>
 #include <user_interface.h>
-#include <driver/uart.h>
 #include <espconn.h>          // espconn_tcp_set_max_con()
 
 #include "user_config.h"
 #include "esp_missing.h"      // os_snprintf()
+#include "mem.h"              // os_malloc(), ...
+#include "os_platform.h"      // printf(), malloc(), ...
 
-#include "wifi_settings.h"
-#include "wifi_config.h"
 #include "user_sntp.h"        // user_snpt_start(), user_snpt_stop()
 #include "user_mqtt.h"        // mqttWifiConnect()
 #include "user_httpd.h"       // httpdBroadcastStart(), httpdBroadcastStop()
 #include "user_wifi.h"
-#include "leds.h"
+
 #include "cgiHistory.h"
+
+#include "wifi_settings.h"
+#include "wifi_config.h"
+#include "leds.h"
 
 // --------------------------------------------------------------------------
 //
@@ -948,8 +951,8 @@ int ICACHE_FLASH_ATTR wifiSetupSoftApMode( void )
    wifi_set_opmode( ( opmode | SOFTAP_MODE ) & STATIONAP_MODE );  // keep station mode if set
 
    // no need to get the current configuration, we setup the fields with the configuration
-   os_memset( ap_config.ssid, 0, sizeof( ap_config.ssid ) );
-   os_memset( ap_config.password, 0, sizeof( ap_config.password ) );
+   memset( ap_config.ssid, 0, sizeof( ap_config.ssid ) );
+   memset( ap_config.password, 0, sizeof( ap_config.password ) );
 
    strncpy( ( char* )ap_config.ssid, Wifi_Ap_Cfg.Ssid, sizeof( ap_config.ssid ) );
    strncpy( ( char* )ap_config.password, Wifi_Ap_Cfg.Password, sizeof( ap_config.password ) );
@@ -1055,8 +1058,8 @@ int ICACHE_FLASH_ATTR wifiSetupStationMode( void )
 
       // no need to get the current configuration, we clear all fields
       // Does this make sense?
-      os_memset( sta_config.ssid, 0, sizeof( sta_config.ssid ) );
-      os_memset( sta_config.password, 0, sizeof( sta_config.password ) );
+      memset( sta_config.ssid, 0, sizeof( sta_config.ssid ) );
+      memset( sta_config.password, 0, sizeof( sta_config.password ) );
 
       sta_config.bssid_set = 0; // no need to check MAC address of AP
       sta_config.threshold.rssi = 0;
@@ -1082,7 +1085,7 @@ int ICACHE_FLASH_ATTR wifiSetupStationMode( void )
 
       // assign a static IP to the STA network interface
       struct ip_info sta_info;
-      os_memset( &sta_info, 0, sizeof( sta_info ) );
+      memset( &sta_info, 0, sizeof( sta_info ) );
       sta_info.ip.addr      = Wifi_Sta_Cfg.Address;
       sta_info.gw.addr      = Wifi_Sta_Cfg.Gateway;
       sta_info.netmask.addr = Wifi_Sta_Cfg.Netmask;

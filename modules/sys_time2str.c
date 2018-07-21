@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------
 //
-// Project       IoT - Internet of Things - Wifi Switch
+// Project       IoT - Internet of Things
 //
 // File          sys_time2str.c
 //
@@ -19,9 +19,9 @@
    #include "esp_types.h"
 
    #define ICACHE_FLASH_ATTR
-   #define os_sprintf   sprintf
 #else
    #include <osapi.h>
+   #define sprintf   os_sprintf
 #endif
 
 #include <stdarg.h>
@@ -50,7 +50,7 @@ char* ICACHE_FLASH_ATTR sys_time2str( uint32_t sys_time )
    div_mod( rest,     ( 60 * 1000 ),        &mm, &rest );
    div_mod( rest,     ( 1000 ),             &ss, &ms );
 
-   os_sprintf( buf, "%d:%02d:%02d.%03d", hh, mm, ss, ms );
+   sprintf( buf, "%d:%02d:%02d.%03d", hh, mm, ss, ms );
 
    return buf;
 }

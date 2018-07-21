@@ -16,7 +16,6 @@
 #ifndef __DEVICE_CONTROL_H__
 #define __DEVICE_CONTROL_H__
 
-#include "libesphttpd/httpd.h"      // CgiStatus
 #include "configs.h"        // Configuration_Item_t
 
 // --------------------------------------------------------------------------
@@ -24,7 +23,7 @@
 // --------------------------------------------------------------------------
 
 
-Configuration_Item_t *init_device_control( void );
+Configuration_Item_t* ICACHE_FLASH_ATTR init_device_control( void );
 
 // --------------------------------------------------------------------------
 //

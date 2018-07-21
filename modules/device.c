@@ -41,7 +41,6 @@ static const char* TAG = "device";
 #include "io.h"
 #include "leds.h"
 #include "device.h"        // switchRelay()
-#include "user_mqtt.h"
 
 // --------------------------------------------------------------------------
 //
@@ -100,7 +99,7 @@ int ICACHE_FLASH_ATTR devGet( enum _devices dev )
          return !io_input_get( pin_Button );
 
       case PowerSense:
-#if defined( ESP201 ) || defined( NODEMCU )  // only these devices support power sensing
+#if defined( ESP201 )                        // only this device support power sensing
          return !io_input_get( pin_PowerSense );
 #else
          return relay_state;

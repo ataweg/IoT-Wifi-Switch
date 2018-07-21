@@ -77,7 +77,7 @@ extern MQTT_client_cfg_t MQTT_Client_Cfg;
 //
 // --------------------------------------------------------------------------
 
-Configuration_Item_t *init_mqtt_config( void );
+Configuration_Item_t* ICACHE_FLASH_ATTR init_mqtt_config( void );
 
 CgiStatus ICACHE_FLASH_ATTR tplMqttConfig( HttpdConnData *connData, char *token, void **arg );
 

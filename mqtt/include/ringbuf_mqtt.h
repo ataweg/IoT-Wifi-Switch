@@ -2,7 +2,6 @@
 #define _RING_BUF_MQTT_H_
 
 #include <os_type.h>
-#include <stdlib.h>
 #include "typedef.h"
 
 typedef struct

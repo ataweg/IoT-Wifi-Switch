@@ -54,11 +54,8 @@ the server, including WiFi connection management capabilities, some IO and
 some pictures of cats.
 */
 
-#include <osapi.h>
-#include <user_interface.h>
+#include "os_platform.h"      // malloc(), ...
 
-#include "io.h"
-#include "leds.h"
 #include "libesphttpd/httpd.h"
 #include "libesphttpd/httpdespfs.h"
 #include "libesphttpd/cgiwifi.h"
@@ -72,14 +69,17 @@ some pictures of cats.
 #include "libesphttpd/cgiredirect.h"
 #include "libesphttpd/route.h"
 
-#include "sntp_client.h"
-#include "cgiRelayStatus.h"
+#include "cgiSwitchStatus.h"
 #include "cgiTimer.h"
 #include "cgiHistory.h"
 #include "cgiConfig.h"
 #include "mqtt_config.h"
 #include "wifi_config.h"
+
+#include "sntp_client.h"
 #include "device.h"     // devGet()
+#include "leds.h"
+#include "io.h"
 
 // --------------------------------------------------------------------------
 //  Prototypes
@@ -122,7 +122,7 @@ const HttpdBuiltInUrl builtInUrls[] ICACHE_RODATA_ATTR STORE_ATTR =
 // ----------------------------+--------------------------------+----------------------
    {"*",                        cgiRedirectApClientToHostname,   "esp8266.nonet", NULL },
    {"/",                        cgiRedirect,                     "/index.tpl.html", NULL },
-   {"/index.tpl.html",          cgiEspFsTemplate,                tplRelayStatus, NULL },
+   {"/index.tpl.html",          cgiEspFsTemplate,                tplSwitchStatus, NULL },
    {"/Timer.tpl.html",          cgiEspFsTemplate,                tplTimer, NULL },
    {"/settimer.cgi",            cgiSetTimer,                     NULL, NULL },
    {"/WifiConfig.tpl.html",     cgiEspFsTemplate,                tplConfig, NULL },
@@ -166,13 +166,13 @@ static int ICACHE_FLASH_ATTR httpdPassFn( HttpdConnData *connData, int no, char 
 {
    if( no == 0 )
    {
-      os_strcpy( user, "admin" );
-      os_strcpy( pass, "welc0me" );
+      strcpy( user, "admin" );
+      strcpy( pass, "welc0me" );
       return 1;
 // Add more users this way. Check against incrementing no for each user added.
 // } else if ( no==1 ) {
-//    os_strcpy( user, "user1" );
-//    os_strcpy( pass, "something" );
+//    strcpy( user, "user1" );
+//    strcpy( pass, "something" );
 //    return 1;
    }
    return 0;
@@ -203,7 +203,7 @@ static int ICACHE_FLASH_ATTR prepareSystemStatusMsg( char *buf, int bufsize )
    int pwr_sense = devGet( PowerSense );
 
    /* Generate response in JSON format */
-   int buflen = os_snprintf( buf, bufsize,
+   int buflen = snprintf( buf, bufsize,
                              "{\"date_time\" : \"%d-%02d-%02d %02d:%02d:%02d\",",
                              dt->tm_year + 1900, dt->tm_mon + 1, dt->tm_mday,
                              dt->tm_hour, dt->tm_min, dt->tm_sec );
@@ -211,7 +211,7 @@ static int ICACHE_FLASH_ATTR prepareSystemStatusMsg( char *buf, int bufsize )
    buf += buflen; // move to end of msg
    bufsize -= buflen;
 
-   buflen += os_snprintf( buf, bufsize,
+   buflen += snprintf( buf, bufsize,
                           " \"uptime\" : \"%ld\","
                           " \"heap\" : \"%d\","
                           " \"sysled\" : \"%d\","
@@ -244,7 +244,7 @@ static void ICACHE_FLASH_ATTR httpdWebsockTimerCb( void *arg )
    int buflen = prepareSystemStatusMsg( buf, sizeof( buf ) );
 
    if( buflen < sizeof( buf ) )
-      cgiWebsockBroadcast( &httpdNonosInstance.httpdInstance, "/status", buf, os_strlen( buf ), WEBSOCK_FLAG_NONE );
+      cgiWebsockBroadcast( &httpdNonosInstance.httpdInstance, "/status", buf, strlen( buf ), WEBSOCK_FLAG_NONE );
 }
 
 // --------------------------------------------------------------------------

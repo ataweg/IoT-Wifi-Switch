@@ -73,8 +73,6 @@ endif
 
 # compiler flags using during compilation of source files
 CFLAGS  = \
-        -Os \
-        -ggdb \
         -std=gnu99 \
         -Werror \
         -Wpointer-arith \
@@ -90,6 +88,15 @@ CFLAGS  = \
         -Wno-address \
         -DHTTPD_MAX_CONNECTIONS=$(HTTPD_MAX_CONNECTIONS) \
         -DHTTPD_STACKSIZE=$(HTTPD_STACKSIZE)
+
+ifeq ("$(DEBUG_USE_GDB)", "yes")
+CFLAGS  += \
+           -Og \
+           -ggdb
+else
+CFLAGS  += \
+           -Os
+endif
 
 ifdef SERVERNAME_PREFIX
    CFLAGS += -DSERVERNAME_PREFIX='"$(SERVERNAME_PREFIX)"'
@@ -225,7 +232,7 @@ CFLAGS          += \
                 -DUSE_OPTIMIZE_PRINTF
 
 ifeq ("$(DEBUG_MEMLEAK)","yes")
-    CFLAGS += -DDBG_MEMLEAKS
+    CFLAGS += -DMEMLEAK_DEBUG
 endif
 
 ifeq ("$(DEBUG_HEAP_INFO)","yes")

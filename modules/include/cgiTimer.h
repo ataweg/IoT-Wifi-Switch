@@ -18,6 +18,8 @@
 #define __CGITIMER_H__
 
 #include "sntp_client.h"            // struct tm
+#include "libesphttpd/httpd.h"      // cgiStatus
+
 
 // --------------------------------------------------------------------------
 //

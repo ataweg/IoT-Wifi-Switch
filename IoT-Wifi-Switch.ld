@@ -12,11 +12,13 @@ SECTIONS
  *  *libmain.a:(.literal.* .text.*)
  *  *libdriver.a:(.literal.* .text.*)
  */
+    *libdriver.a:(.literal.* .text.*)
     *libairkiss.a:(.literal.* .text.*)
     *libc.a:(.literal.* .text.*)
     *libgcc.a:(.literal.* .text.*)
     *liblwip_536.a:(.literal.* .text.*)
     *libmesh.a:(.literal.* .text.*)
+    *libnet80211.a:(.literal.* .text.*)
     *libphy.a:(.literal.* .text.*)
     *libpp.a:(.literal.* .text.*)
     *libpwm.a:(.literal.* .text.*)

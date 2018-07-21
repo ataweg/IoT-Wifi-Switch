@@ -20,6 +20,7 @@
 
 #include <osapi.h>
 #include <user_interface.h>   // system_get_free_heap_size()
+#include "os_platform.h"         // malloc(), ...
 
 // --------------------------------------------------------------------------
 //
@@ -41,7 +42,7 @@ int ICACHE_FLASH_ATTR dump_httpd_data( const char* data, unsigned short len )
    }
    buf[i] = 0;
 
-   os_printf( "%s\r\n", buf );
+   printf( "%s\r\n", buf );
    return i;
 }
 
@@ -68,7 +69,7 @@ int ICACHE_FLASH_ATTR dump_httpd_data_hex( const char* data, unsigned short len 
    }
    buf[3 * i] = 0;
 
-   os_printf( "%s\r\n", buf );
+   printf( "%s\r\n", buf );
    return i;
 }
 
@@ -84,7 +85,7 @@ int ICACHE_FLASH_ATTR dump_heap( void )
 
    if( heap != last_heap )
    {
-      os_printf( "**  Heap: %ld\r\n", heap );
+      printf( "**  Heap: %ld\r\n", heap );
       last_heap = heap;
    }
    return last_heap;

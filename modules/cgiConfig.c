@@ -47,7 +47,7 @@ static const char *TAG = "cgiConfig";
 // --------------------------------------------------------------------------
 
 static int ICACHE_FLASH_ATTR get_num_keywords( void );
-static const Config_Keyword_t *get_config_keyword( int index );
+static const Config_Keyword_t* ICACHE_FLASH_ATTR get_config_keyword( int index );
 static int ICACHE_FLASH_ATTR get_config( int id, char **str, int *value );
 static int ICACHE_FLASH_ATTR compare_config( int id, char *str, int value );
 static int ICACHE_FLASH_ATTR update_config( int id, char *str, int value );
@@ -78,7 +78,7 @@ static int ICACHE_FLASH_ATTR get_num_keywords( void )
    return num_keywords;
 }
 
-static const Config_Keyword_t *get_config_keyword( int index )
+static const Config_Keyword_t* ICACHE_FLASH_ATTR get_config_keyword( int index )
 {
    // ESP_LOGD( TAG, "get_config_keyword %d", index );
 
@@ -431,9 +431,9 @@ CgiStatus ICACHE_FLASH_ATTR tplConfig( HttpdConnData *connData, char *token, voi
 
    if( buflen == 0 )
    {
-      os_strcpy( buf, "Unknown [" );
-      os_strcat( buf, token );
-      os_strcat( buf, "]" );
+      strcpy( buf, "Unknown [" );
+      strcat( buf, token );
+      strcat( buf, "]" );
       buflen = strlen( buf );
    }
 

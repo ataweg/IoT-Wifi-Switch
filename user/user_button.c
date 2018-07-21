@@ -12,7 +12,7 @@
 //    2018-04-25  AWe   remove resetButtonTimer, function is handle by the
 //                        new buttonVeryLongPress function
 //    2017-11-25  AWe   move button related functions to  user_button.c
-//    2017-11-15  AWe   do WPS on long press, relay on/off on short press ( not implemented yet )
+//    2017-11-15  AWe   do WPS on long press, switch on/off on short press
 //                      add WPS related functions resetBtnTimerCb(),
 //                        ioBtnTimerInit() from io.c
 //    2017-08-19  AWe   change debug message printing
@@ -61,8 +61,8 @@ static const char* TAG = "user/user_button.c";
 //
 // --------------------------------------------------------------------------
 
-static keys_param keys;
-static single_key_param* single_key_list[ BUTTONS_NUM ];
+static keys_param_t keys;
+static single_key_param_t* single_key_list[ BUTTONS_NUM ];
 
 // --------------------------------------------------------------------------
 //
@@ -94,14 +94,12 @@ static void ICACHE_FLASH_ATTR buttonLongPress( void )
 static void ICACHE_FLASH_ATTR buttonVeryLongPress( void )
 {
    ESP_LOGD( TAG, "buttonVeryLongPress" );
-#ifdef _NU_
    // restart device
    wifiEnableReconnect( false );  // disable reconnect
    wifi_station_disconnect();
    wifi_set_opmode( STATIONAP_MODE ); // reset to AP+STA mode
    ESP_LOGI( TAG, "Reset to AP mode. Restarting system...\r\n\r\n" );
    system_restart();
-#endif
 }
 
 // --------------------------------------------------------------------------

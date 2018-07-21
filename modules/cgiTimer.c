@@ -34,6 +34,8 @@ static const char* TAG = "modules/cgiTimer.c";
 //
 // --------------------------------------------------------------------------
 
+#include <stdlib.h>  // strtol()
+
 #include <osapi.h>
 #include <user_interface.h>
 
@@ -92,7 +94,7 @@ char* ICACHE_FLASH_ATTR timeToClock( time_t time )
    // create tm struct
    struct tm *dt = gmtime( &time );
 
-   os_snprintf( buf, bufsize, "%02d:%02d:%02d",
+   snprintf( buf, bufsize, "%02d:%02d:%02d",
       dt->tm_hour, dt->tm_min, dt->tm_sec );
 
    return buf;
@@ -110,7 +112,7 @@ char* ICACHE_FLASH_ATTR timeToDate( time_t time )
    // create tm struct
    struct tm *dt = gmtime( &time );
 
-   os_snprintf( buf, bufsize, "%02d.%02d.%04d",
+   snprintf( buf, bufsize, "%02d.%02d.%04d",
       dt->tm_mday, dt->tm_mon + 1, dt->tm_year + 1900 );
 
    return buf;
@@ -470,7 +472,7 @@ static int ICACHE_FLASH_ATTR switchingTimeGet( uint32_t *cfg_data, int len, uint
    cfg_mode_t *cfg_mode = ( cfg_mode_t * )cfg_data;  // not used here
    cfg_data++;
 
-   os_memcpy( switching_time, cfg_data, sizeof( switching_time_ext_t ) );
+   memcpy( switching_time, cfg_data, sizeof( switching_time_ext_t ) );
 
    if( switching_time->id != ID_SWITCHTIME )
       return false;
@@ -587,10 +589,10 @@ CgiStatus ICACHE_FLASH_ATTR tplTimer( HttpdConnData *connData, char *token, void
       return HTTPD_CGI_DONE;
    }
 
-   os_strcpy( buf, "Unknown [" );
-   os_strcat( buf, token );
-   os_strcat( buf, "]" );
-   buflen = os_strlen( buf );
+   strcpy( buf, "Unknown [" );
+   strcat( buf, token );
+   strcat( buf, "]" );
+   buflen = strlen( buf );
 
    int remaining = httpdSend( connData, NULL, 0 ); // get free spece in send bufffer
 
@@ -609,7 +611,7 @@ CgiStatus ICACHE_FLASH_ATTR tplTimer( HttpdConnData *connData, char *token, void
             // only show future switching times
             if( switchingTime[ i ].time > current_time )
             {
-               buflen = os_snprintf( buf, bufsize,
+               buflen = snprintf( buf, bufsize,
                            "<tr%s>\r\n"   // " class=\"alt\" "
                               "<td>"
                                  "%s"     // switchingTime[ i ].type
@@ -669,7 +671,7 @@ CgiStatus ICACHE_FLASH_ATTR tplTimer( HttpdConnData *connData, char *token, void
       time_t current_time = sntp_gettime();
       dt = gmtime( &current_time );
 
-      buflen = os_snprintf( buf, bufsize,
+      buflen = snprintf( buf, bufsize,
                             "%02d.%02d.%04d",       // dd.mm.yyyy
                             dt->tm_mday, dt->tm_mon + 1, dt->tm_year + 1900 );
    }
@@ -679,13 +681,13 @@ CgiStatus ICACHE_FLASH_ATTR tplTimer( HttpdConnData *connData, char *token, void
       time_t current_time = sntp_gettime();
       dt = gmtime( &current_time );
 
-      buflen = os_snprintf( buf, bufsize,
+      buflen = snprintf( buf, bufsize,
                             "%02d:%02d:%02d",      // hh:mm:ss
                             dt->tm_hour, dt->tm_min, dt->tm_sec );
    }
    else if( strcmp( token, "hourglass" ) == 0 )
    {
-      buflen = os_snprintf( buf, bufsize, "%s", timeToClock( last_hourglass ) );
+      buflen = snprintf( buf, bufsize, "%s", timeToClock( last_hourglass ) );
    }
 
    // ESP_LOGD( TAG, "tplTimer : len %d, remain %d, %s\r\n%s", buflen, remaining, buflen < ( remaining - 1024 ) ? "DONE" : "MORE", buf );
@@ -756,7 +758,7 @@ CgiStatus ICACHE_FLASH_ATTR cgiSetTimer( HttpdConnData *connData )
    time_t hourglass = 0;
 
    switching_time_ext_t newSwitchingTime;
-   os_memset( &newSwitchingTime, 0, sizeof( switching_time_ext_t ) );
+   memset( &newSwitchingTime, 0, sizeof( switching_time_ext_t ) );
 
    for( int i = 0; i < NUM_TOKEN; i++ )
    {
@@ -968,9 +970,9 @@ static void ICACHE_FLASH_ATTR switchingTimeSortList( switching_time_ext_t *switc
             // swap the elements
             ESP_LOGD( TAG, "swap the element %d with %d element; swap %d (%d) <-> (%d)", i , i + 1, count, switchingTime[ i ].time, switchingTime[ i + 1].time );
             switching_time_ext_t switchingTime_tmp;
-            os_memcpy( &switchingTime_tmp, &switchingTime[ i ], sizeof( switching_time_ext_t ) );
-            os_memcpy( &switchingTime[ i ], &switchingTime[ i + 1], sizeof( switching_time_ext_t ) );
-            os_memcpy( &switchingTime[ i + 1 ], &switchingTime_tmp, sizeof( switching_time_ext_t ) );
+            memcpy( &switchingTime_tmp, &switchingTime[ i ], sizeof( switching_time_ext_t ) );
+            memcpy( &switchingTime[ i ], &switchingTime[ i + 1], sizeof( switching_time_ext_t ) );
+            memcpy( &switchingTime[ i + 1 ], &switchingTime_tmp, sizeof( switching_time_ext_t ) );
 
             new_n = i + 1;
             count++;
@@ -1036,7 +1038,7 @@ int ICACHE_FLASH_ATTR switchingTimeInit( void )
    // ESP_LOGD( TAG, "switchingTimeInit" );
 
    // on startup first clear the switchingTimer array
-   os_memset( switchingTime, 0, sizeof( switching_time_ext_t ) * MAX_SWITCHING_TIMERS );
+   memset( switchingTime, 0, sizeof( switching_time_ext_t ) * MAX_SWITCHING_TIMERS );
 
    switching_time_ext_t switching_time;
    int rc = user_config_scan( ID_EXTRA_DATA, switchingTimeGet, &switching_time );

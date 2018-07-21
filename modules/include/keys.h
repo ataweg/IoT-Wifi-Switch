@@ -63,23 +63,23 @@ typedef struct single_key_param
    uint32_t press_very_long_time;
 
    os_timer_t key_50ms;
-} single_key_param;
+} single_key_param_t;
 
 typedef struct keys_param
 {
    uint8_t key_num;                       // number of keys
-   single_key_param* *single_key_list; // pointer to an array
-} keys_param;
+   single_key_param_t* *single_key_list; // pointer to an array
+} keys_param_t;
 
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
 
-single_key_param* ICACHE_FLASH_ATTR single_key_init( uint8_t gpio_id, uint32_t gpio_name, uint8_t gpio_func,
+single_key_param_t* ICACHE_FLASH_ATTR single_key_init( uint8_t gpio_id, uint32_t gpio_name, uint8_t gpio_func,
                                           key_function very_long_press, uint32_t press_very_long_time,
                                           key_function long_press,  uint32_t press_long_time,
                                           key_function short_press );
-void ICACHE_FLASH_ATTR keys_init( keys_param *keys, int key_num, single_key_param* *single_key_list );
+void ICACHE_FLASH_ATTR keys_init( keys_param_t *keys, int key_num, single_key_param_t* *single_key_list );
 
 // --------------------------------------------------------------------------
 //

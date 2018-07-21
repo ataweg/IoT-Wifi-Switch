@@ -36,7 +36,7 @@ static const char* TAG = "mqtt_settings";
 #include <osapi.h>
 #include <user_interface.h>
 
-#include "user_config.h"
+#include "os_platform.h"         // malloc(), ...
 #include "configs.h"
 #include "mqtt_settings.h"
 
@@ -93,12 +93,12 @@ static const char* TAG = "mqtt_settings";
 #define Default_0x75    "0"                     // Retained
 #define Default_0x76    "0"                     // QoS
 
-#define Default_0xD1    "MQTT-Switch"           // MQTT_Name
-#define Default_0xD2    "MQTT_Server"           // MQTT_Server            USER_DOMAIN
-#define Default_0xD3    "MQTT_LOGINNAME"        // MQTT_Username          MQTT_LOGINNAME
+#define Default_0xD1    "MQTT-Switch"          // MQTT_Name
+#define Default_0xD2    "MQTT_Server"          // MQTT_Server            USER_DOMAIN
+#define Default_0xD3    "MQTT_Username"        // MQTT_Username          MQTT_LOGINNAME
 #define Default_0xD4    "MQTT_Password"         // MQTT_Password          MQTT_PASSWORD
 #define Default_0xD5    "8883"                  // MQTT_Port              MQTT_PORT
-#define Default_0xD6    "mqtt-switch-1F0E5A"    // MQTT_Client_ID         MQTT_CLIENT_ID
+#define Default_0xD6    "MQTT_CLIENT_ID"        // MQTT_Client_ID         MQTT_CLIENT_ID
 #define Default_0xD7    "1"                     // MQTT_Enable_SSL
 #define Default_0xD8    "1"                     // MQTT_Self_Signed
 #define Default_0xD9    "120"                   // MQTT_Keep_Alive        MQTT_KEEPALIVE
@@ -251,7 +251,7 @@ void ICACHE_FLASH_ATTR config_print_mqtt_defaults( void )
    {
       ASSERT( "Src %s [0x%x08] isn't 32bit aligned", ( ( uint32_t )( &mqtt_settings[ i ].mode ) & 3 ) == 0, "mqtt_settings[ i ].mode", ( uint32_t )( &mqtt_settings[ i ].mode ) );
       ASSERT( "Dest %s [0x%x08] isn't 32bit aligned", ( ( uint32_t )( &mode ) & 3 ) == 0, "mode", ( uint32_t )( &mode ) );
-      os_memcpy( &mode, &mqtt_settings[ i ].id, sizeof( mode ) );
+      memcpy( &mode, &mqtt_settings[ i ].id, sizeof( mode ) );
       if( mode.id == 0xff )  // end of list
          break;
 
@@ -267,9 +267,9 @@ void ICACHE_FLASH_ATTR config_print_mqtt_defaults( void )
 
       ASSERT( "Src %s [0x%x08] isn't 32bit aligned", ( ( uint32_t )mqtt_settings[ i ].text & 3 ) == 0, "mqtt_settings[ i ].text", ( uint32_t )mqtt_settings[ i ].text );
       ASSERT( "Dest %s [0x%x08] isn't 32bit aligned", ( ( uint32_t )default_str & 3 ) == 0, "default_str", ( uint32_t )default_str );
-      os_memcpy( default_str, mqtt_settings[ i ].text, len4 );
+      memcpy( default_str, mqtt_settings[ i ].text, len4 );
       default_str[ mode.len ] = 0; // terminate string
-      os_printf( "id 0x%02x: %1d %3d \"%s\" %d\r\n", mode.id, mode.type, mode.len, default_str, len4 );
+      printf( "id 0x%02x: %1d %3d \"%s\" %d\r\n", mode.id, mode.type, mode.len, default_str, len4 );
       i++;
    }
 }

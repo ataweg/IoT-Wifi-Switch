@@ -23,13 +23,16 @@
 #- THISDIR  := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/
 THISDIR  :=
 
-BUILDDIR := F:/working/Build/Projects/InternetOfThings/Devices/IoT-Wifi-Switch/Github/IoT-Wifi-Switch
+# name for the target project
+TARGET          = IoT-Wifi-Switch
+
+BUILDDIR := F:/working/Build/Projects/Github/$(TARGET)
+
+MAKEFILE_DIR    = $(THISDIR)makefiles/
 
 # --------------------------------------------------------------------------
 # some definitions for the current project
 
-# name for the target project
-TARGET          = IoT-Wifi-Switch
 
 # COM port settings.
 # COM port number and baud rate:
@@ -44,8 +47,6 @@ BUILD_DIR_BASE  = $(BUILDDIR)/build/
 
 # firmware directory
 FW_DIR_BASE     = $(BUILDDIR)/firmware/
-
-MAKEFILE_DIR    = $(THISDIR)makefiles/
 
 # --------------------------------------------------------------------------
 
@@ -85,9 +86,11 @@ include	$(MAKEFILE_DIR)settings.mk
 # --------------------------------------------------------------------------
 # Individual project settings (Optional)
 
-TARGET_DEVICE ?= NodeMCU
-# TARGET_DEVICE ?= NodeMCU-Modul
+# TARGET_DEVICE ?= NodeMCU
+  TARGET_DEVICE ?= NodeMCU-Modul
 # TARGET_DEVICE  ?= ESP-201
+
+DEBUG_USE_GDB ?= no
 
 SERVERNAME_PREFIX=esp8266-httpd
 TCP_MAX_CONNECTIONS   = 10
@@ -280,9 +283,11 @@ ifeq ("$(USE_SO_REUSEADD)","yes")
    CFLAGS       += -DCONFIG_ESPHTTPD_SO_REUSEADDR=1
 endif
 
+# --------------------------------------------------------------------------
+# debug settings
+
 ifeq ("$(DEBUG_MEMLEAK)","yes")
-    CFLAGS += -DDBG_MEMLEAKS \
-              -DMEMLEAK_DEBUG
+    CFLAGS += -DMEMLEAK_DEBUG
 endif
 
 ifeq ("$(DEBUG_HEAP_INFO)","yes")
@@ -301,6 +306,13 @@ ifeq ("$(OUTPUT_TYPE)","ota")
    CFLAGS += -DOTA_FLASH_SIZE_K=$(ESP_SPI_FLASH_SIZE_K)
 endif
 
+ifeq ("$(DEBUG_USE_GDB)", "yes")
+  MODULES      += gdbstub
+  INCDIR       += gdbstub
+  EXTRA_INCDIR += C:/SysGCC/esp8266/HAL/SRC/include
+  LDFLAGS      += -ggdb
+endif
+
 CFLAGS += -DINITDATAPOS=$(INITDATAPOS) -DBLANKPOS=$(BLANKPOS)
 
 # --------------------------------------------------------------------------
@@ -314,7 +326,7 @@ LIBESPHTTPD =  $(BUILD_DIR_BASE)libesphttpd/libesphttpd.a \
 PHONIES = $(LIBESPHTTPD)
 
 # Additional (maybe generated) ld scripts to link in
-EXTRA_LD_SCRIPTS = $(BUILD_DIR_BASE)ldscript_memspecific.ld IoT-Wifi_Switch.ld
+EXTRA_LD_SCRIPTS = $(BUILD_DIR_BASE)ldscript_memspecific.ld IoT-Wifi-Switch.ld
 
 # Root includes
 include $(MAKEFILE_DIR)common_nonos.mk
@@ -331,6 +343,7 @@ include $(MAKEFILE_DIR)Makefile.$(OUTPUT_TYPE)
 $(PHONIES):
 #	$(Q) mkdir -p $(BUILD_DIR_BASE)libesphttpd
 	$(Q) make -C libesphttpd BUILD_DIR=$(BUILD_DIR_BASE)libesphttpd/ EXT_INCDIR=../include \
+	             DEBUG_USE_GDB=$(DEBUG_USE_GDB) \
 	             DEBUG_MEMLEAK=$(DEBUG_MEMLEAK) \
 	             DEBUG_HEAP_INFO=$(DEBUG_HEAP_INFO) \
 	             SERVERNAME_PREFIX=$(SERVERNAME_PREFIX) \

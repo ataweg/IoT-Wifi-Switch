@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------
 //
-// Project       IoT - Internet of Things - WebServer
+// Project       IoT - Internet of Things
 //
 // File          cgiflash.c
 //
@@ -40,6 +40,8 @@ static const char *TAG = "ota";
 // --------------------------------------------------------------------------
 //
 // --------------------------------------------------------------------------
+
+#include <stdlib.h>  // atoi()
 
 // #include <osapi.h>
 #include "libesphttpd/esp.h"
